@@ -35,6 +35,50 @@ interface PrintCertificateParams {
   operatorRole: UserRole;
 }
 
+function printViaHiddenIframe(html: string): boolean {
+  if (typeof document === 'undefined') return false;
+
+  const iframe = document.createElement('iframe');
+  iframe.style.position = 'fixed';
+  iframe.style.right = '0';
+  iframe.style.bottom = '0';
+  iframe.style.width = '0';
+  iframe.style.height = '0';
+  iframe.style.border = '0';
+  iframe.setAttribute('aria-hidden', 'true');
+
+  const cleanup = () => {
+    window.setTimeout(() => {
+      iframe.remove();
+    }, 800);
+  };
+
+  iframe.onload = () => {
+    const frameWindow = iframe.contentWindow;
+    if (!frameWindow) {
+      cleanup();
+      return;
+    }
+
+    frameWindow.focus();
+    frameWindow.print();
+    cleanup();
+  };
+
+  document.body.appendChild(iframe);
+
+  const frameDoc = iframe.contentDocument;
+  if (!frameDoc) {
+    cleanup();
+    return false;
+  }
+
+  frameDoc.open();
+  frameDoc.write(html);
+  frameDoc.close();
+  return true;
+}
+
 export function printCertificateAsPdf({ certificate, operatorName, operatorRole }: PrintCertificateParams): void {
   if (typeof window === 'undefined') return;
 
@@ -94,13 +138,15 @@ export function printCertificateAsPdf({ certificate, operatorName, operatorRole 
 </body>
 </html>`;
 
+  if (printViaHiddenIframe(html)) return;
+
   const view = window.open('', '_blank', 'noopener,noreferrer,width=1280,height=900');
-  if (!view) {
-    window.alert('Não foi possível abrir a visualização do certificado. Verifique bloqueio de pop-up.');
+  if (view) {
+    view.document.open();
+    view.document.write(html);
+    view.document.close();
     return;
   }
 
-  view.document.open();
-  view.document.write(html);
-  view.document.close();
+  window.alert('Não foi possível abrir a impressão do certificado. Libere pop-up para este site e tente novamente.');
 }
