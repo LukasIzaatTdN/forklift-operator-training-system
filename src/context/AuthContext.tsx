@@ -2,7 +2,6 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import {
   createUserWithEmailAndPassword,
   deleteUser,
-  fetchSignInMethodsForEmail,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut,
@@ -55,7 +54,8 @@ function mapFirebaseError(code?: string): string {
 
   const mapper: Record<string, string> = {
     'auth/invalid-email': 'E-mail inválido.',
-    'auth/invalid-credential': 'E-mail ou senha incorretos.',
+    'auth/invalid-credential':
+      'E-mail ou senha incorretos (ou a conta não existe no Firebase Authentication).',
     'auth/user-not-found': 'Usuário não encontrado.',
     'auth/wrong-password': 'Senha incorreta.',
     'auth/email-already-in-use': 'Este e-mail já está em uso.',
@@ -221,21 +221,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (!normalizedEmail || !normalizedPassword) {
           return { success: false, error: 'Informe e-mail e senha.' };
-        }
-
-        const signInMethods = await fetchSignInMethodsForEmail(firebaseAuth, normalizedEmail);
-        if (signInMethods.length === 0) {
-          return {
-            success: false,
-            error: 'Conta não encontrada. Verifique se o cadastro com token foi concluído.',
-          };
-        }
-
-        if (!signInMethods.includes('password')) {
-          return {
-            success: false,
-            error: 'Este e-mail não está com login por senha habilitado.',
-          };
         }
 
         await signInWithEmailAndPassword(firebaseAuth, normalizedEmail, normalizedPassword);

@@ -50,7 +50,13 @@ export default function UsersManager() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Gestão de Usuários</h1>
-        <p className="text-sm text-gray-500">Gerencie função e acesso dos usuários do sistema.</p>
+        <p className="text-sm text-gray-500">
+          Gerencie perfis de acesso no Firestore (roles e status no app).
+        </p>
+        <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-2">
+          Esta tela não cria contas no Firebase Authentication. Contas de login são criadas apenas em
+          "Criar Conta" com token.
+        </p>
       </div>
 
       {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm">{error}</div>}
