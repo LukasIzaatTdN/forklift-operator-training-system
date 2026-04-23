@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import LoginPage from './components/LoginPage';
-import Sidebar from './components/Sidebar';
+import Sidebar, { Page, AdminPage, OperatorPage } from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import TrainingModules from './components/TrainingModules';
 import DailyTips from './components/DailyTips';
@@ -11,23 +11,72 @@ import VideoAulas from './components/VideoAulas';
 import LearningTracks from './components/LearningTracks';
 import TrainingReport from './components/TrainingReport';
 import { TrainingProgressProvider } from './context/TrainingProgressContext';
+import AdminDashboard from './components/AdminDashboard';
+import UsersManager from './components/UsersManager';
+import TokenManager from './components/TokenManager';
+import Reports from './components/Reports';
+import AdminTickets from './components/AdminTickets';
+import AdminSettings from './components/AdminSettings';
 
-type Page =
-  | 'dashboard'
-  | 'tracks'
-  | 'modules'
-  | 'tips'
-  | 'quiz'
-  | 'checklist'
-  | 'videoaulas'
-  | 'report';
+const operatorDefaultPage: OperatorPage = 'dashboard';
+const adminDefaultPage: AdminPage = 'admin-dashboard';
+
+const operatorPages = new Set<Page>([
+  'dashboard',
+  'tracks',
+  'modules',
+  'tips',
+  'quiz',
+  'checklist',
+  'videoaulas',
+  'training-report',
+]);
+
+const adminPages = new Set<Page>([
+  'admin-dashboard',
+  'admin-users',
+  'admin-tokens',
+  'admin-tickets',
+  'admin-reports',
+  'admin-settings',
+]);
 
 function MainApp() {
   const { user, isAdmin } = useAuth();
-  const [currentPage, setCurrentPage] = useState<Page>('dashboard');
+  const [currentPage, setCurrentPage] = useState<Page>(isAdmin ? adminDefaultPage : operatorDefaultPage);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  useEffect(() => {
+    if (isAdmin && !adminPages.has(currentPage)) {
+      setCurrentPage(adminDefaultPage);
+      return;
+    }
+
+    if (!isAdmin && !operatorPages.has(currentPage)) {
+      setCurrentPage(operatorDefaultPage);
+    }
+  }, [currentPage, isAdmin]);
+
   const renderPage = () => {
+    if (isAdmin) {
+      switch (currentPage) {
+        case 'admin-dashboard':
+          return <AdminDashboard />;
+        case 'admin-users':
+          return <UsersManager />;
+        case 'admin-tokens':
+          return <TokenManager />;
+        case 'admin-tickets':
+          return <AdminTickets />;
+        case 'admin-reports':
+          return <Reports />;
+        case 'admin-settings':
+          return <AdminSettings />;
+        default:
+          return <AdminDashboard />;
+      }
+    }
+
     switch (currentPage) {
       case 'dashboard':
         return <Dashboard onNavigate={setCurrentPage} />;
@@ -43,7 +92,7 @@ function MainApp() {
         return <Checklist />;
       case 'videoaulas':
         return <VideoAulas isAdmin={isAdmin} />;
-      case 'report':
+      case 'training-report':
         return <TrainingReport />;
       default:
         return <Dashboard onNavigate={setCurrentPage} />;
@@ -58,12 +107,17 @@ function MainApp() {
     quiz: 'Quiz de Conhecimento',
     checklist: 'Checklist Pré-Operacional',
     videoaulas: 'Videoaulas Práticas',
-    report: 'Relatório de Treinamento',
+    'training-report': 'Meu Relatório',
+    'admin-dashboard': 'Dashboard Administrativo',
+    'admin-users': 'Gestão de Usuários',
+    'admin-tokens': 'Gerenciamento de Tokens',
+    'admin-tickets': 'Chamados',
+    'admin-reports': 'Relatórios',
+    'admin-settings': 'Configurações',
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Sidebar */}
       <Sidebar
         currentPage={currentPage}
         onNavigate={setCurrentPage}
@@ -72,9 +126,7 @@ function MainApp() {
         user={user}
       />
 
-      {/* Main Content */}
       <div className="lg:ml-72">
-        {/* Top Bar */}
         <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-200">
           <div className="flex items-center justify-between px-4 md:px-6 py-4">
             <div className="flex items-center gap-3">
@@ -93,25 +145,23 @@ function MainApp() {
                 <span className="text-sm">🚜</span>
                 <span className="text-xs font-medium text-amber-700">EmpilhaPro</span>
               </div>
-              {/* User Badge */}
               {user && (
-                <div className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-medium ${
-                  isAdmin
-                    ? 'bg-red-50 border-red-200 text-red-700'
-                    : 'bg-green-50 border-green-200 text-green-700'
-                }`}>
+                <div
+                  className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-medium ${
+                    isAdmin
+                      ? 'bg-red-50 border-red-200 text-red-700'
+                      : 'bg-green-50 border-green-200 text-green-700'
+                  }`}
+                >
                   <span className={`w-2 h-2 rounded-full ${isAdmin ? 'bg-red-500' : 'bg-green-500'}`} />
-                  {isAdmin ? 'Admin' : 'Operador'}
+                  {isAdmin ? 'Admin' : 'Operator'}
                 </div>
               )}
             </div>
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="p-4 md:p-6 lg:p-8">
-          {renderPage()}
-        </main>
+        <main className="p-4 md:p-6 lg:p-8">{renderPage()}</main>
       </div>
     </div>
   );

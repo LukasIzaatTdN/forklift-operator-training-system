@@ -1,0 +1,114 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function userDoc(uid) {
+      return get(/databases/$(database)/documents/users/$(uid));
+    }
+
+    function userExists(uid) {
+      return exists(/databases/$(database)/documents/users/$(uid));
+    }
+
+    function isAdmin() {
+      return isSignedIn()
+        && userExists(request.auth.uid)
+        && userDoc(request.auth.uid).data.deleted != true
+        && userDoc(request.auth.uid).data.role == 'admin';
+    }
+
+    function isOperator() {
+      return isSignedIn()
+        && userExists(request.auth.uid)
+        && userDoc(request.auth.uid).data.deleted != true
+        && userDoc(request.auth.uid).data.role == 'operator';
+    }
+
+    function validOwnUserCreate(uid) {
+      return isSelf(uid)
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.role == 'operator'
+        && request.resource.data.deleted == false
+        && request.resource.data.email is string
+        && request.resource.data.name is string;
+    }
+
+    function validTokenConsumeUpdate() {
+      // Usuário comum só pode consumir token para si mesmo:
+      // - used: false -> true
+      // - usedByUid = auth.uid
+      // - usedByEmail string
+      // - não pode alterar token, createdBy, expiresAt etc.
+      return isSignedIn()
+        && resource.data.used == false
+        && resource.data.expiresAt > request.time.toMillis()
+        && request.resource.data.used == true
+        && request.resource.data.usedByUid == request.auth.uid
+        && request.resource.data.usedByEmail is string
+        && request.resource.data.token == resource.data.token
+        && request.resource.data.createdByUid == resource.data.createdByUid
+        && request.resource.data.createdByEmail == resource.data.createdByEmail
+        && request.resource.data.createdAtMs == resource.data.createdAtMs
+        && request.resource.data.expiresAt == resource.data.expiresAt
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'used', 'usedAt', 'usedByUid', 'usedByEmail'
+        ]);
+    }
+
+    // USERS
+    match /users/{userId} {
+      allow get: if isSelf(userId) || isAdmin();
+      allow list: if isAdmin();
+
+      // Criação do próprio perfil no primeiro login/cadastro com token
+      allow create: if validOwnUserCreate(userId) || isAdmin();
+
+      // Somente admin altera usuários (role, deleted, etc)
+      allow update, delete: if isAdmin();
+    }
+
+    // PROGRESSO DE TREINAMENTO
+    match /user_progress/{userId} {
+      allow read, write: if isSelf(userId) || isAdmin();
+    }
+
+    // TOKENS DE CRIAÇÃO DE CONTA
+    match /creation_tokens/{tokenId} {
+      // Admin vê tudo
+      allow get, list: if isAdmin();
+
+      // Usuário autenticado pode consultar token específico para consumo
+      allow get: if isSignedIn();
+
+      // Só admin cria/remove token
+      allow create, delete: if isAdmin();
+
+      // Admin pode atualizar livremente; usuário só pode consumir
+      allow update: if isAdmin() || validTokenConsumeUpdate();
+    }
+
+    // CHAMADOS
+    match /tickets/{ticketId} {
+      // Admin controla tudo
+      allow read, write: if isAdmin();
+
+      // Operator pode abrir chamado para si
+      allow create: if isOperator()
+        && request.resource.data.createdByUid == request.auth.uid
+        && request.resource.data.status == 'aberto';
+
+      // Operator vê apenas os próprios chamados
+      allow get: if isOperator() && resource.data.createdByUid == request.auth.uid;
+      allow list: if isOperator();
+    }
+  }
+}

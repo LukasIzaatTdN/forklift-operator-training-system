@@ -1,0 +1,69 @@
+mutation CreateSeedData @transaction @auth(level: USER, insecureReason: "This is a seed data mutation for internal use and can be run by any authenticated user.") {
+  user1: user_insert(data: {
+    id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+    displayName: "Alice Smith",
+    email: "alice.smith@example.com",
+    role: "Operator",
+    createdAt: "2023-01-01T10:00:00Z"
+  })
+  user2: user_insert(data: {
+    id: "b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22",
+    displayName: "Bob Johnson",
+    email: "bob.johnson@example.com",
+    role: "Administrator",
+    createdAt: "2023-01-02T11:00:00Z"
+  })
+  forkliftType1: forkliftType_insert(data: {
+    id: "c2eebc99-9c0b-4ef8-bb6d-6bb9bd380a33",
+    name: "Electric Counterbalance",
+    capacity: "2500 kg",
+    description: "Standard electric forklift for indoor use.",
+    imageURL: "https://example.com/electric-forklift.jpg",
+    createdAt: "2023-01-03T09:00:00Z"
+  })
+  forkliftType2: forkliftType_insert(data: {
+    id: "d3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44",
+    name: "Rough Terrain Forklift",
+    capacity: "5000 kg",
+    description: "Heavy-duty forklift for outdoor and uneven surfaces.",
+    imageURL: "https://example.com/rough-terrain-forklift.jpg",
+    createdAt: "2023-01-04T14:30:00Z"
+  })
+  trainingModule1: trainingModule_insert(data: {
+    id: "e4eebc99-9c0b-4ef8-bb6d-6bb9bd380a55",
+    title: "Basic Forklift Operation",
+    description: "Covers fundamental skills and safety protocols.",
+    difficultyLevel: "Beginner",
+    durationHours: 8,
+    isMandatory: true,
+    createdAt: "2023-01-05T08:00:00Z"
+  })
+  trainingModule2: trainingModule_insert(data: {
+    id: "f5eebc99-9c0b-4ef8-bb6d-6bb9bd380a66",
+    title: "Advanced Load Handling",
+    description: "Techniques for handling complex and unstable loads.",
+    difficultyLevel: "Intermediate",
+    durationHours: 4,
+    isMandatory: false,
+    createdAt: "2023-01-06T13:00:00Z"
+  })
+  trainingAssignment1: trainingAssignment_insert(data: {
+    id: "g6eebc99-9c0b-4ef8-bb6d-6bb9bd380a77",
+    userId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+    trainingModuleId: "e4eebc99-9c0b-4ef8-bb6d-6bb9bd380a55",
+    assignedAt: "2023-01-07T09:00:00Z",
+    status: "Completed",
+    completedAt: "2023-01-08T17:00:00Z",
+    score: 92
+  })
+  operationalLog1: operationalLog_insert(data: {
+    id: "h7eebc99-9c0b-4ef8-bb6d-6bb9bd380a88",
+    userId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+    forkliftTypeId: "c2eebc99-9c0b-4ef8-bb6d-6bb9bd380a33",
+    logDate: "2023-01-09",
+    taskDescription: "Transported pallets from warehouse to loading dock.",
+    timeTakenMinutes: 60,
+    loadWeightKg: 1500.0,
+    createdAt: "2023-01-09T10:00:00Z"
+  })
+}

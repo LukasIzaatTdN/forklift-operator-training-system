@@ -1,0 +1,55 @@
+query ListAllForkliftTypes @auth(level: PUBLIC, insecureReason: "This operation is safe to expose to the public as it only retrieves general information about forklift types.") {
+  forkliftTypes {
+    id
+    name
+    capacity
+    description
+    imageURL
+    createdAt
+  }
+}
+
+mutation CreateNewTrainingModule($title: String!, $description: String!, $difficultyLevel: String!, $durationHours: Int, $isMandatory: Boolean) @auth(expr: "auth.token.admin == true") {
+  trainingModule_insert(data: {
+    title: $title,
+    description: $description,
+    difficultyLevel: $difficultyLevel,
+    durationHours: $durationHours,
+    isMandatory: $isMandatory,
+    createdAt_expr: "request.time"
+  }) {
+    id
+  }
+}
+
+query GetMyTrainingAssignments @auth(level: USER, insecureReason: "This operation is safe to expose to all logged in users as it only retrieves their own training assignments.") {
+  trainingAssignments(where: {userId: {eq_expr: "auth.uid"}}) {
+    id
+    trainingModule {
+      title
+      description
+      difficultyLevel
+    }
+    assignedAt
+    status
+    completedAt
+    score
+  }
+}
+
+mutation RecordOperationalLog($forkliftTypeId: UUID!, $logDate: Date!, $taskDescription: String!, $timeTakenMinutes: Int!, $incidentsReported: String, $safetyViolations: String, $notes: String, $loadWeightKg: Float) @auth(level: USER, insecureReason: "This operation is safe to expose to all logged in users as it records their operational logs.") {
+  operationalLog_insert(data: {
+    userId_expr: "auth.uid",
+    forkliftTypeId: $forkliftTypeId,
+    logDate: $logDate,
+    taskDescription: $taskDescription,
+    timeTakenMinutes: $timeTakenMinutes,
+    incidentsReported: $incidentsReported,
+    safetyViolations: $safetyViolations,
+    notes: $notes,
+    loadWeightKg: $loadWeightKg,
+    createdAt_expr: "request.time"
+  }) {
+    id
+  }
+}

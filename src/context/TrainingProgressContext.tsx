@@ -1,7 +1,9 @@
 import { ReactNode, createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useAuth } from './AuthContext';
 import { Certificate, QuizAttempt, TrainingTrack, UserTrainingProgress } from '../types';
 import { CERTIFICATE_VALIDITY_MONTHS, addMonths, isCertificateExpired } from '../utils/certificates';
+import { firestoreDb } from '../lib/firebase';
 
 const STORAGE_KEY = 'empilhapro_training_progress_v1';
 
@@ -42,6 +44,27 @@ function createDefaultProgress(userId: string): UserTrainingProgress {
   };
 }
 
+function normalizeProgress(progress: Partial<UserTrainingProgress>, userId: string): UserTrainingProgress {
+  const base = createDefaultProgress(userId);
+  const merged: UserTrainingProgress = {
+    ...base,
+    ...progress,
+    userId,
+    completedModuleIds: progress.completedModuleIds || [],
+    completedLessonIds: progress.completedLessonIds || [],
+    checklistCompletions: progress.checklistCompletions || 0,
+    lastChecklistAt: progress.lastChecklistAt || null,
+    quizAttempts: progress.quizAttempts || [],
+    certificates: (progress.certificates || []).map((cert) => ({
+      ...cert,
+      validUntil: cert.validUntil || addMonths(cert.issuedAt, CERTIFICATE_VALIDITY_MONTHS),
+    })),
+    updatedAt: progress.updatedAt || Date.now(),
+  };
+
+  return merged;
+}
+
 function sameDay(a: string | null, b: Date): boolean {
   if (!a) return false;
   return new Date(a).toDateString() === b.toDateString();
@@ -75,10 +98,10 @@ function buildTrackStatus(progress: UserTrainingProgress, track: TrainingTrack):
 }
 
 export function TrainingProgressProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user, authMode } = useAuth();
   const [allProgress, setAllProgress] = useState<Record<string, UserTrainingProgress>>({});
 
-  useEffect(() => {
+  const loadLocalProgress = useCallback(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (!stored) return;
 
@@ -87,14 +110,7 @@ export function TrainingProgressProvider({ children }: { children: ReactNode }) 
       const migrated: Record<string, UserTrainingProgress> = {};
 
       for (const [userId, progress] of Object.entries(parsed)) {
-        migrated[userId] = {
-          ...progress,
-          completedLessonIds: progress.completedLessonIds || [],
-          certificates: (progress.certificates || []).map((cert) => ({
-            ...cert,
-            validUntil: cert.validUntil || addMonths(cert.issuedAt, CERTIFICATE_VALIDITY_MONTHS),
-          })),
-        };
+        migrated[userId] = normalizeProgress(progress, userId);
       }
 
       setAllProgress(migrated);
@@ -103,9 +119,45 @@ export function TrainingProgressProvider({ children }: { children: ReactNode }) 
     }
   }, []);
 
+  const loadRemoteProgress = useCallback(async () => {
+    if (!user || authMode !== 'firebase' || !firestoreDb) return;
+
+    const ref = doc(firestoreDb, 'user_progress', user.id);
+    const snap = await getDoc(ref);
+
+    if (!snap.exists()) {
+      const defaultProgress = createDefaultProgress(user.id);
+      setAllProgress((prev) => ({ ...prev, [user.id]: defaultProgress }));
+      await setDoc(ref, defaultProgress, { merge: true });
+      return;
+    }
+
+    const merged = normalizeProgress(snap.data() as Partial<UserTrainingProgress>, user.id);
+    setAllProgress((prev) => ({ ...prev, [user.id]: merged }));
+  }, [authMode, user]);
+
   useEffect(() => {
+    if (authMode === 'firebase' && user) {
+      void loadRemoteProgress();
+      return;
+    }
+
+    loadLocalProgress();
+  }, [authMode, loadLocalProgress, loadRemoteProgress, user]);
+
+  useEffect(() => {
+    if (authMode === 'firebase') return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(allProgress));
-  }, [allProgress]);
+  }, [allProgress, authMode]);
+
+  const persistProgress = useCallback(
+    async (nextProgress: UserTrainingProgress) => {
+      if (authMode === 'firebase' && firestoreDb) {
+        await setDoc(doc(firestoreDb, 'user_progress', nextProgress.userId), nextProgress, { merge: true });
+      }
+    },
+    [authMode]
+  );
 
   const getProgressForUser = useCallback(
     (userId: string): UserTrainingProgress => {
@@ -118,20 +170,26 @@ export function TrainingProgressProvider({ children }: { children: ReactNode }) 
     (updater: (current: UserTrainingProgress) => UserTrainingProgress) => {
       if (!user) return;
 
+      let updatedProgress: UserTrainingProgress | null = null;
+
       setAllProgress((prev) => {
         const current = prev[user.id] || createDefaultProgress(user.id);
-        const updated = updater(current);
+        updatedProgress = {
+          ...updater(current),
+          updatedAt: Date.now(),
+        };
 
         return {
           ...prev,
-          [user.id]: {
-            ...updated,
-            updatedAt: Date.now(),
-          },
+          [user.id]: updatedProgress,
         };
       });
+
+      if (updatedProgress) {
+        void persistProgress(updatedProgress);
+      }
     },
-    [user]
+    [persistProgress, user]
   );
 
   const markModuleCompleted = useCallback(

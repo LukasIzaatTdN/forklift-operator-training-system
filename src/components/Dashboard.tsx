@@ -7,7 +7,7 @@ import { defaultVideos } from '../data/videos';
 const STORAGE_KEY = 'empilhapro_videos';
 
 interface DashboardProps {
-  onNavigate: (page: 'tracks' | 'modules' | 'tips' | 'quiz' | 'checklist' | 'videoaulas' | 'report') => void;
+  onNavigate: (page: 'tracks' | 'modules' | 'tips' | 'quiz' | 'checklist' | 'videoaulas' | 'training-report') => void;
 }
 
 export default function Dashboard({ onNavigate }: DashboardProps) {
@@ -165,11 +165,11 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           </button>
 
           <button
-            onClick={() => onNavigate('report')}
+            onClick={() => onNavigate('training-report')}
             className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 hover:shadow-md hover:border-teal-200 transition-all text-left group"
           >
             <div className="text-3xl mb-3 group-hover:scale-110 transition-transform">📈</div>
-            <h3 className="font-semibold text-gray-900 mb-1">Relatório de Treinamento</h3>
+            <h3 className="font-semibold text-gray-900 mb-1">Meu Relatório</h3>
             <p className="text-xs text-gray-500">Visualize progresso, tentativas e certificados</p>
           </button>
         </div>

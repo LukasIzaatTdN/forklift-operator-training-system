@@ -58,7 +58,7 @@ export interface VideoLesson {
   addedAt: number;
 }
 
-export type UserRole = 'admin' | 'operador';
+export type UserRole = 'admin' | 'operator' | 'operador';
 
 export interface User {
   id: string;
@@ -70,10 +70,18 @@ export interface User {
 
 export interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => { success: boolean; error?: string };
-  logout: () => void;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  registerWithToken: (
+    name: string,
+    email: string,
+    password: string,
+    creationToken: string
+  ) => Promise<{ success: boolean; error?: string }>;
+  generateCreationToken: (validHours?: number) => Promise<{ success: boolean; token?: string; error?: string }>;
+  logout: () => Promise<void>;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  authMode: 'firebase' | 'local';
 }
 
 export interface TrainingTrack {

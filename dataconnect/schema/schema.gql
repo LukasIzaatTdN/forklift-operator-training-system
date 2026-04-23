@@ -1,0 +1,57 @@
+type User @table {
+  displayName: String!
+  email: String!
+  role: String!
+  createdAt: Timestamp!
+  photoUrl: String
+  employeeId: String
+}
+
+type ForkliftType @table {
+  name: String!
+  capacity: String!
+  createdAt: Timestamp!
+  description: String
+  imageURL: String
+}
+
+type TrainingModule @table {
+  title: String!
+  description: String!
+  difficultyLevel: String!
+  createdAt: Timestamp!
+  durationHours: Int
+  isMandatory: Boolean
+}
+
+type TrainingAssignment @table {
+  user: User!
+  trainingModule: TrainingModule!
+  assignedAt: Timestamp!
+  status: String!
+  completedAt: Timestamp
+  score: Int
+}
+
+type OperationalLog @table {
+  user: User!
+  forkliftType: ForkliftType!
+  logDate: Date!
+  taskDescription: String!
+  timeTakenMinutes: Int!
+  createdAt: Timestamp!
+  incidentsReported: String
+  safetyViolations: String
+  notes: String
+  loadWeightKg: Float
+}
+
+type SkillAssessment @table {
+  user: User!
+  assessmentDate: Date!
+  skillArea: String!
+  rating: Int!
+  createdAt: Timestamp!
+  comments: String
+  assessorId: UUID
+}
