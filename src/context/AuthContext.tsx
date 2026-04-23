@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import {
   createUserWithEmailAndPassword,
   deleteUser,
+  fetchSignInMethodsForEmail,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut,
@@ -61,9 +62,28 @@ function mapFirebaseError(code?: string): string {
     'auth/weak-password': 'Senha muito fraca. Use pelo menos 6 caracteres.',
     'auth/too-many-requests': 'Muitas tentativas. Tente novamente em alguns minutos.',
     'auth/network-request-failed': 'Falha de rede. Verifique sua conexão.',
+    'auth/operation-not-allowed': 'Login por e-mail/senha não está habilitado no Firebase Authentication.',
+    'auth/user-disabled': 'Este usuário foi desativado no Firebase Authentication.',
+    'permission-denied': 'Permissão negada no Firestore. Verifique regras e índices.',
   };
 
   return mapper[code] || 'Falha na autenticação. Verifique suas credenciais.';
+}
+
+function buildFallbackOperatorUser(firebaseUser: {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+}): User {
+  const email = firebaseUser.email || '';
+  const name = firebaseUser.displayName || (email ? email.split('@')[0] : 'Operador');
+
+  return {
+    id: firebaseUser.uid,
+    email,
+    name,
+    role: 'operator',
+  };
 }
 
 async function resolveFirebaseAppUser(firebaseUser: {
@@ -71,7 +91,7 @@ async function resolveFirebaseAppUser(firebaseUser: {
   email: string | null;
   displayName: string | null;
 }): Promise<User | null> {
-  if (!firestoreDb) return null;
+  if (!firestoreDb) return buildFallbackOperatorUser(firebaseUser);
 
   const uid = firebaseUser.uid;
   const email = firebaseUser.email || '';
@@ -79,7 +99,12 @@ async function resolveFirebaseAppUser(firebaseUser: {
   const defaultName = firebaseUser.displayName || (email ? email.split('@')[0] : 'Operador');
 
   const userDocRef = doc(firestoreDb, 'users', uid);
-  const userDocSnap = await getDoc(userDocRef);
+  let userDocSnap;
+  try {
+    userDocSnap = await getDoc(userDocRef);
+  } catch {
+    return buildFallbackOperatorUser(firebaseUser);
+  }
 
   if (!userDocSnap.exists()) {
     // Primeiro login: tenta criar com role desejada.
@@ -93,15 +118,19 @@ async function resolveFirebaseAppUser(firebaseUser: {
       });
     } catch (error) {
       if (preferredRole !== 'admin') {
-        throw error;
+        return buildFallbackOperatorUser(firebaseUser);
       }
 
-      await ensureUserProfile({
-        uid,
-        email,
-        name: defaultName,
-        role: 'operator',
-      });
+      try {
+        await ensureUserProfile({
+          uid,
+          email,
+          name: defaultName,
+          role: 'operator',
+        });
+      } catch {
+        return buildFallbackOperatorUser(firebaseUser);
+      }
     }
 
     return {
@@ -161,9 +190,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser(appUser);
             localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(appUser));
           } catch {
-            await signOut(auth);
-            setUser(null);
-            localStorage.removeItem(AUTH_STORAGE_KEY);
+            const fallbackUser = buildFallbackOperatorUser(firebaseUser);
+            setUser(fallbackUser);
+            localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(fallbackUser));
           }
         })();
       });
@@ -187,7 +216,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     if (authMode === 'firebase' && firebaseAuth) {
       try {
-        await signInWithEmailAndPassword(firebaseAuth, email, password);
+        const normalizedEmail = email.trim().toLowerCase();
+        const normalizedPassword = password.trim();
+
+        if (!normalizedEmail || !normalizedPassword) {
+          return { success: false, error: 'Informe e-mail e senha.' };
+        }
+
+        const signInMethods = await fetchSignInMethodsForEmail(firebaseAuth, normalizedEmail);
+        if (signInMethods.length === 0) {
+          return {
+            success: false,
+            error: 'Conta não encontrada. Verifique se o cadastro com token foi concluído.',
+          };
+        }
+
+        if (!signInMethods.includes('password')) {
+          return {
+            success: false,
+            error: 'Este e-mail não está com login por senha habilitado.',
+          };
+        }
+
+        await signInWithEmailAndPassword(firebaseAuth, normalizedEmail, normalizedPassword);
         return { success: true };
       } catch (error) {
         const code = (error as { code?: string }).code;
@@ -220,18 +271,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const credential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
-      const displayName = name.trim() || email.split('@')[0] || 'Operador';
+      const normalizedEmail = email.trim().toLowerCase();
+      const normalizedPassword = password.trim();
+      const normalizedName = name.trim();
+      const normalizedToken = creationToken.trim().toUpperCase();
+
+      const credential = await createUserWithEmailAndPassword(
+        firebaseAuth,
+        normalizedEmail,
+        normalizedPassword
+      );
+      const displayName = normalizedName || normalizedEmail.split('@')[0] || 'Operador';
 
       await updateProfile(credential.user, { displayName });
 
       try {
-        await consumeCreationToken(creationToken, credential.user.uid, credential.user.email || email);
+        await consumeCreationToken(
+          normalizedToken,
+          credential.user.uid,
+          credential.user.email || normalizedEmail
+        );
 
         await ensureUserProfile({
           uid: credential.user.uid,
           name: displayName,
-          email,
+          email: normalizedEmail,
           role: 'operator',
         });
 

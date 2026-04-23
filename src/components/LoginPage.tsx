@@ -129,7 +129,7 @@ export default function LoginPage() {
               <div>
                 <label className="block text-sm font-semibold text-slate-300 mb-1.5">Usuário</label>
                 <input
-                  type="text"
+                  type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Digite seu e-mail"
