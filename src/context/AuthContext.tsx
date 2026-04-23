@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
 import {
   createUserWithEmailAndPassword,
   deleteUser,
@@ -165,6 +165,7 @@ async function resolveFirebaseAppUser(firebaseUser: {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const isRegisteringWithTokenRef = useRef(false);
 
   useEffect(() => {
     if (authMode === 'firebase' && firebaseAuth) {
@@ -174,6 +175,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!firebaseUser) {
           setUser(null);
           localStorage.removeItem(AUTH_STORAGE_KEY);
+          return;
+        }
+
+        if (isRegisteringWithTokenRef.current) {
+          // Durante cadastro com token, o fluxo manual controla criação de perfil e sessão.
           return;
         }
 
@@ -255,6 +261,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { success: false, error: 'Informe o token de criação.' };
     }
 
+    isRegisteringWithTokenRef.current = true;
+
     try {
       const normalizedEmail = email.trim().toLowerCase();
       const normalizedPassword = password.trim();
@@ -284,14 +292,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           role: 'operator',
         });
 
+        const appUser = await resolveFirebaseAppUser({
+          uid: credential.user.uid,
+          email: credential.user.email,
+          displayName: credential.user.displayName,
+        });
+
+        if (!appUser) {
+          await signOut(firebaseAuth);
+          setUser(null);
+          localStorage.removeItem(AUTH_STORAGE_KEY);
+          return { success: false, error: 'Falha ao finalizar cadastro. Tente novamente.' };
+        }
+
+        setUser(appUser);
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(appUser));
         return { success: true };
       } catch (tokenError) {
         await deleteUser(credential.user);
+        setUser(null);
+        localStorage.removeItem(AUTH_STORAGE_KEY);
         return { success: false, error: (tokenError as Error).message || 'Token inválido.' };
       }
     } catch (error) {
       const code = (error as { code?: string }).code;
       return { success: false, error: mapFirebaseError(code) };
+    } finally {
+      isRegisteringWithTokenRef.current = false;
     }
   };
 
