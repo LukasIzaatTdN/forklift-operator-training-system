@@ -24,7 +24,7 @@ interface TrainingProgressContextType {
   markLessonCompleted: (moduleId: string, lessonId: string, moduleLessonIds: string[]) => void;
   markChecklistCompleted: () => void;
   recordQuizAttempt: (score: number, totalQuestions: number) => void;
-  issueCertificate: (track: TrainingTrack) => Certificate | null;
+  issueCertificate: (track: TrainingTrack) => Promise<Certificate | null>;
   getTrackStatus: (track: TrainingTrack, userId?: string) => TrackStatus;
   getProgressForUser: (userId: string) => UserTrainingProgress;
 }
@@ -292,10 +292,11 @@ export function TrainingProgressProvider({ children }: { children: ReactNode }) 
   );
 
   const issueCertificate = useCallback(
-    (track: TrainingTrack): Certificate | null => {
+    async (track: TrainingTrack): Promise<Certificate | null> => {
       if (!user) return null;
 
-      const status = getTrackStatus(track);
+      const currentProgress = getProgressForUser(user.id);
+      const status = buildTrackStatus(currentProgress, track);
       if (!status.modulesDone || !status.quizDone || !status.checklistDone || status.certified) {
         return null;
       }
@@ -310,14 +311,28 @@ export function TrainingProgressProvider({ children }: { children: ReactNode }) 
         finalScore: status.bestQuizScore,
       };
 
-      updateCurrentUserProgress((current) => ({
-        ...current,
-        certificates: [certificate, ...current.certificates],
+      const nextProgress: UserTrainingProgress = {
+        ...currentProgress,
+        certificates: [certificate, ...currentProgress.certificates],
+        updatedAt: Date.now(),
+      };
+
+      if (authMode === 'firebase' && firestoreDb) {
+        try {
+          await setDoc(doc(firestoreDb, 'user_progress', nextProgress.userId), nextProgress, { merge: true });
+        } catch {
+          return null;
+        }
+      }
+
+      setAllProgress((prev) => ({
+        ...prev,
+        [user.id]: nextProgress,
       }));
 
       return certificate;
     },
-    [getTrackStatus, updateCurrentUserProgress, user]
+    [authMode, getProgressForUser, user]
   );
 
   const progress = useMemo(() => {

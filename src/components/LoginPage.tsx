@@ -74,7 +74,7 @@ export default function LoginPage() {
           <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-amber-400 to-yellow-500 rounded-2xl shadow-xl shadow-amber-500/30 mb-4">
             <span className="text-4xl">🚜</span>
           </div>
-          <h1 className="text-3xl font-bold text-white">EmpilhaPro</h1>
+          <h1 className="text-3xl font-bold text-white">Tropa do Garfo</h1>
           <p className="text-slate-400 text-sm mt-1">Sistema de Aperfeiçoamento para Operadores</p>
         </div>
 

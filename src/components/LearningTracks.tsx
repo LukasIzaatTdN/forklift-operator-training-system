@@ -14,17 +14,33 @@ export default function LearningTracks() {
     return trainingTracks.filter((track) => track.targetRoles.includes(user.role));
   }, [user]);
 
-  const handleIssueCertificate = (trackId: string) => {
+  const handleIssueCertificate = async (trackId: string) => {
     const track = availableTracks.find((item) => item.id === trackId);
     if (!track) return;
 
-    const cert = issueCertificate(track);
+    const cert = await issueCertificate(track);
     if (cert) {
       setFeedback(`Certificado emitido com sucesso para a trilha "${track.title}".`);
       return;
     }
 
-    setFeedback('A trilha ainda não atende os critérios de certificação ou já foi certificada.');
+    const status = getTrackStatus(track);
+    const pendencias: string[] = [];
+    if (!status.modulesDone) pendencias.push(`módulos (${status.modulesCompleted}/${status.modulesTotal})`);
+    if (!status.quizDone) pendencias.push(`quiz (${status.bestQuizScore}% de ${track.quizMinScore}%)`);
+    if (!status.checklistDone) pendencias.push('checklist');
+
+    if (status.certified) {
+      setFeedback('Esta trilha já possui certificado válido emitido.');
+      return;
+    }
+
+    if (pendencias.length > 0) {
+      setFeedback(`Ainda faltam requisitos para certificar: ${pendencias.join(', ')}.`);
+      return;
+    }
+
+    setFeedback('Não foi possível emitir o certificado agora. Verifique conexão/permissões e tente novamente.');
   };
 
   return (
@@ -89,7 +105,7 @@ export default function LearningTracks() {
               </div>
 
               <button
-                onClick={() => handleIssueCertificate(track.id)}
+                onClick={() => void handleIssueCertificate(track.id)}
                 disabled={status.certified || !status.modulesDone || !status.quizDone || !status.checklistDone}
                 className="mt-5 w-full py-3 rounded-xl text-sm font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-emerald-500 to-green-600 text-white hover:from-emerald-600 hover:to-green-700"
               >

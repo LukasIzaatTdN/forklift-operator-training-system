@@ -52,7 +52,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       {/* Header */}
       <div className="bg-gradient-to-r from-yellow-500 via-amber-500 to-orange-500 rounded-2xl p-6 md:p-8 text-white shadow-lg">
         <h1 className="text-2xl md:text-3xl font-bold mb-2">
-          👋 Bem-vindo ao EmpilhaPro!
+          👋 Bem-vindo ao Tropa do Garfo!
         </h1>
         <p className="text-yellow-100 text-sm md:text-base max-w-xl">
           Seu sistema completo de aperfeiçoamento e dicas para operadores de empilhadeira.

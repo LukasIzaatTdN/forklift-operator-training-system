@@ -75,8 +75,8 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, user
             <div className="flex items-center gap-3">
               <div className="text-4xl">🚜</div>
               <div>
-                <h1 className="text-lg font-bold text-white">EmpilhaPro</h1>
-                <p className="text-xs text-yellow-100">{isAdmin ? 'Painel Administrativo' : 'Treinamento Operacional'}</p>
+                <h1 className="text-lg font-bold text-white">Tropa do Garfo</h1>
+                <p className="text-xs text-yellow-100">{isAdmin ? 'Painel Administrativo' : 'Treinamento Operadores'}</p>
               </div>
             </div>
           </div>
