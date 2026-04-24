@@ -11,8 +11,9 @@ import {
 import { doc, getDoc } from 'firebase/firestore';
 import { User, AuthContextType, UserRole } from '../types';
 import { firebaseAuth, firestoreDb, hasFirebaseConfig } from '../lib/firebase';
-import { consumeCreationToken, createCreationToken } from '../lib/creationTokens';
+import { createCreationToken } from '../lib/creationTokens';
 import { ensureUserProfile } from '../lib/adminData';
+import { consumeSignupToken, validateSignupToken } from '../lib/paymentApi';
 
 // Local users database (fallback if Firebase is not configured)
 const USERS: { email: string; password: string; user: User }[] = [
@@ -279,11 +280,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await updateProfile(credential.user, { displayName });
 
       try {
-        await consumeCreationToken(
+        const validation = await validateSignupToken(normalizedToken, normalizedEmail);
+        if (!validation.success) {
+          throw new Error(validation.error || 'Token inválido.');
+        }
+
+        const consumeResult = await consumeSignupToken(
           normalizedToken,
           credential.user.uid,
           credential.user.email || normalizedEmail
         );
+        if (!consumeResult.success) {
+          throw new Error(consumeResult.error || 'Falha ao consumir token.');
+        }
 
         await ensureUserProfile({
           uid: credential.user.uid,

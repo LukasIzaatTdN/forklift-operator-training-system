@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth, getAvailableUsers } from '../context/AuthContext';
+import { createCheckoutPayment, getTokenByPayment } from '../lib/paymentApi';
 
 type AuthTab = 'login' | 'register';
 
@@ -18,6 +19,40 @@ export default function LoginPage() {
   const [registerPassword, setRegisterPassword] = useState('');
   const [registerToken, setRegisterToken] = useState('');
   const [registerSuccess, setRegisterSuccess] = useState('');
+  const [buyName, setBuyName] = useState('');
+  const [buyEmail, setBuyEmail] = useState('');
+  const [buyLoading, setBuyLoading] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get('status');
+    const paymentId = params.get('session_id') || params.get('payment_id');
+    const payerEmail = params.get('payer_email') || params.get('email') || localStorage.getItem('checkout_email') || '';
+
+    if (status !== 'approved' || !paymentId) return;
+
+    setTab('register');
+    if (payerEmail) {
+      setRegisterEmail(payerEmail);
+    }
+
+    void (async () => {
+      const result = await getTokenByPayment(paymentId, payerEmail);
+      if (!result.success || !result.data?.token) {
+        setError(
+          result.error ||
+            'Pagamento aprovado, mas o token ainda não foi liberado. Aguarde alguns segundos e tente novamente.'
+        );
+        return;
+      }
+
+      setRegisterToken(result.data.token);
+      setRegisterSuccess('Pagamento aprovado! Token preenchido automaticamente para finalizar seu cadastro.');
+      setError('');
+      localStorage.removeItem('checkout_email');
+      window.history.replaceState({}, '', window.location.pathname);
+    })();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,6 +94,27 @@ export default function LoginPage() {
     if (!result.success) {
       setError(result.error || 'Erro ao fazer login.');
     }
+  };
+
+  const handleBuyAccess = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setRegisterSuccess('');
+    setBuyLoading(true);
+
+    const result = await createCheckoutPayment({
+      name: buyName.trim(),
+      email: buyEmail.trim().toLowerCase(),
+    });
+    setBuyLoading(false);
+
+    if (!result.success || !result.data?.checkoutUrl) {
+      setError(result.error || 'Falha ao iniciar pagamento.');
+      return;
+    }
+
+    localStorage.setItem('checkout_email', buyEmail.trim().toLowerCase());
+    window.location.href = result.data.checkoutUrl;
   };
 
   return (
@@ -262,8 +318,40 @@ export default function LoginPage() {
           <div className="mt-6 bg-blue-500/10 border border-blue-400/20 rounded-xl p-4">
             <p className="text-sm text-blue-200 font-medium">Autenticação Firebase ativa.</p>
             <p className="text-xs text-blue-100/80 mt-1">
-              Novas contas só podem ser criadas com token gerado por administrador.
+              Novas contas só podem ser criadas com token válido (admin ou pagamento aprovado).
             </p>
+          </div>
+        )}
+
+        {authMode === 'firebase' && (
+          <div className="mt-4 bg-emerald-500/10 border border-emerald-400/20 rounded-xl p-4">
+            <h3 className="text-sm font-semibold text-emerald-200 mb-2">Comprar acesso</h3>
+            <p className="text-xs text-emerald-100/80 mb-3">
+              Pagamento aprovado libera automaticamente um token de cadastro.
+            </p>
+            <form onSubmit={handleBuyAccess} className="space-y-2.5">
+              <input
+                type="text"
+                value={buyName}
+                onChange={(e) => setBuyName(e.target.value)}
+                placeholder="Seu nome"
+                className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+              <input
+                type="email"
+                value={buyEmail}
+                onChange={(e) => setBuyEmail(e.target.value)}
+                placeholder="seuemail@empresa.com"
+                className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+              <button
+                type="submit"
+                disabled={buyLoading || !buyName || !buyEmail}
+                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-sm disabled:opacity-50"
+              >
+                {buyLoading ? 'Iniciando pagamento...' : 'Comprar acesso'}
+              </button>
+            </form>
           </div>
         )}
 

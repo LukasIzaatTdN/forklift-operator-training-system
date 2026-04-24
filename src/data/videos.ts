@@ -5,7 +5,7 @@ export const defaultVideos: VideoLesson[] = [
     id: 'default-1',
     title: 'Como Operar uma Empilhadeira — Passo a Passo Completo',
     description: 'Aula completa mostrando todos os passos para operar uma empilhadeira com segurança, desde a inspeção pré-operacional até a operação em armazém.',
-    url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    url: 'https://www.youtube.com/watch?v=TqkSIznHgkc',
     category: 'operacao',
     duration: '15:30',
     addedAt: Date.now() - 100000,
