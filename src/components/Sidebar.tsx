@@ -17,7 +17,8 @@ export type AdminPage =
   | 'admin-tokens'
   | 'admin-tickets'
   | 'admin-reports'
-  | 'admin-settings';
+  | 'admin-settings'
+  | 'admin-videoaulas';
 
 export type Page = OperatorPage | AdminPage;
 
@@ -44,6 +45,7 @@ const adminMenuItems: { id: AdminPage; label: string; icon: string; color: strin
   { id: 'admin-dashboard', label: 'Dashboard', icon: '📊', color: 'hover:bg-indigo-50' },
   { id: 'admin-users', label: 'Usuários', icon: '👥', color: 'hover:bg-blue-50' },
   { id: 'admin-tokens', label: 'Tokens', icon: '🎟️', color: 'hover:bg-purple-50' },
+  { id: 'admin-videoaulas', label: 'Videoaulas', icon: '🎬', color: 'hover:bg-violet-50' },
   { id: 'admin-tickets', label: 'Chamados', icon: '📋', color: 'hover:bg-amber-50' },
   { id: 'admin-reports', label: 'Relatórios', icon: '📈', color: 'hover:bg-emerald-50' },
   { id: 'admin-settings', label: 'Configurações', icon: '⚙️', color: 'hover:bg-slate-50' },

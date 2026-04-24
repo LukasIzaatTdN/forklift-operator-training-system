@@ -66,6 +66,7 @@ export default function VideoAulas({ isAdmin }: VideoAulasProps) {
   const [selectedCategory, setSelectedCategory] = useState('todas');
   const [selectedVideo, setSelectedVideo] = useState<VideoLesson | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingVideoId, setEditingVideoId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -108,8 +109,8 @@ export default function VideoAulas({ isAdmin }: VideoAulasProps) {
     return matchesCategory && matchesSearch;
   });
 
-  // Handle add video
-  const handleAddVideo = () => {
+  // Handle add/edit video
+  const handleSaveVideo = () => {
     setFormError('');
 
     if (!formTitle.trim()) {
@@ -127,17 +128,32 @@ export default function VideoAulas({ isAdmin }: VideoAulasProps) {
       return;
     }
 
-    const newVideo: VideoLesson = {
-      id: `custom-${Date.now()}`,
-      title: formTitle.trim(),
-      description: formDescription.trim() || 'Videoaula adicionada pelo usuário.',
-      url: formUrl.trim(),
-      category: formCategory,
-      duration: formDuration.trim() || '—:—',
-      addedAt: Date.now(),
-    };
+    if (editingVideoId) {
+      const updatedVideos = videos.map((video) => {
+        if (video.id !== editingVideoId) return video;
+        return {
+          ...video,
+          title: formTitle.trim(),
+          description: formDescription.trim() || 'Videoaula adicionada pelo usuário.',
+          url: formUrl.trim(),
+          category: formCategory,
+          duration: formDuration.trim() || '—:—',
+        };
+      });
+      saveVideos(updatedVideos);
+    } else {
+      const newVideo: VideoLesson = {
+        id: `custom-${Date.now()}`,
+        title: formTitle.trim(),
+        description: formDescription.trim() || 'Videoaula adicionada pelo usuário.',
+        url: formUrl.trim(),
+        category: formCategory,
+        duration: formDuration.trim() || '—:—',
+        addedAt: Date.now(),
+      };
+      saveVideos([...videos, newVideo]);
+    }
 
-    saveVideos([...videos, newVideo]);
     resetForm();
     setShowAddModal(false);
   };
@@ -149,6 +165,23 @@ export default function VideoAulas({ isAdmin }: VideoAulasProps) {
     setFormCategory('operacao');
     setFormDuration('');
     setFormError('');
+    setEditingVideoId(null);
+  };
+
+  const openAddModal = () => {
+    resetForm();
+    setShowAddModal(true);
+  };
+
+  const openEditModal = (video: VideoLesson) => {
+    setFormTitle(video.title);
+    setFormDescription(video.description || '');
+    setFormUrl(video.url);
+    setFormCategory(video.category);
+    setFormDuration(video.duration);
+    setFormError('');
+    setEditingVideoId(video.id);
+    setShowAddModal(true);
   };
 
   const handleDeleteVideo = (id: string) => {
@@ -223,9 +256,10 @@ export default function VideoAulas({ isAdmin }: VideoAulasProps) {
     );
   };
 
-  // Add Video Modal (Admin only)
+  // Add/Edit Video Modal (Admin only)
   const AddVideoModal = () => {
     if (!showAddModal) return null;
+    const isEditing = Boolean(editingVideoId);
 
     return (
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => { setShowAddModal(false); resetForm(); }}>
@@ -239,8 +273,10 @@ export default function VideoAulas({ isAdmin }: VideoAulasProps) {
               <div className="flex items-center gap-3">
                 <span className="text-3xl">🎬</span>
                 <div>
-                  <h3 className="text-lg font-bold text-white">Adicionar Videoaula</h3>
-                  <p className="text-violet-200 text-xs">Cole o link do YouTube e preencha os dados</p>
+                  <h3 className="text-lg font-bold text-white">{isEditing ? 'Editar Videoaula' : 'Adicionar Videoaula'}</h3>
+                  <p className="text-violet-200 text-xs">
+                    {isEditing ? 'Atualize os dados da videoaula selecionada' : 'Cole o link do YouTube e preencha os dados'}
+                  </p>
                 </div>
               </div>
               <button
@@ -356,10 +392,10 @@ export default function VideoAulas({ isAdmin }: VideoAulasProps) {
               Cancelar
             </button>
             <button
-              onClick={handleAddVideo}
+              onClick={handleSaveVideo}
               className="flex-1 px-4 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-xl text-sm font-medium hover:from-violet-700 hover:to-purple-700 transition-all shadow-md shadow-violet-200"
             >
-              ➕ Adicionar Videoaula
+              {isEditing ? '💾 Salvar Alterações' : '➕ Adicionar Videoaula'}
             </button>
           </div>
         </div>
@@ -381,7 +417,7 @@ export default function VideoAulas({ isAdmin }: VideoAulasProps) {
           </div>
           {isAdmin && (
             <button
-              onClick={() => setShowAddModal(true)}
+              onClick={openAddModal}
               className="flex items-center gap-2 px-5 py-3 bg-white text-violet-700 font-semibold rounded-xl text-sm hover:bg-violet-50 transition-colors shadow-md self-start"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -462,7 +498,7 @@ export default function VideoAulas({ isAdmin }: VideoAulasProps) {
           </p>
           {isAdmin && !searchTerm && (
             <button
-              onClick={() => setShowAddModal(true)}
+              onClick={openAddModal}
               className="px-5 py-2.5 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-xl text-sm font-medium hover:from-violet-700 hover:to-purple-700 transition-all"
             >
               ➕ Adicionar Videoaula
@@ -541,20 +577,41 @@ export default function VideoAulas({ isAdmin }: VideoAulasProps) {
                     <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${catInfo.bg} ${catInfo.text}`}>
                       {catInfo.emoji} {categoryLabelMap[video.category]}
                     </span>
-                    {/* Delete button only for admin */}
-                    {isAdmin && !isDefaultVideo(video.id) && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowDeleteConfirm(video.id);
-                        }}
-                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Remover videoaula"
-                      >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
+                    {isAdmin && (
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openEditModal(video);
+                          }}
+                          className="p-1.5 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-colors"
+                          title="Editar videoaula"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L12 15l-4 1 1-4 9.586-9.586z"
+                            />
+                          </svg>
+                        </button>
+                        {/* Delete button only for custom videos */}
+                        {!isDefaultVideo(video.id) && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowDeleteConfirm(video.id);
+                            }}
+                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Remover videoaula"
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>

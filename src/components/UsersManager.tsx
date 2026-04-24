@@ -27,6 +27,13 @@ export default function UsersManager() {
 
   const handleRoleChange = async (target: AdminUserItem) => {
     const nextRole = target.role === 'admin' ? 'operator' : 'admin';
+    const isSelf = target.id === user?.id;
+    const confirmationMessage = isSelf
+      ? `Você está alterando sua própria função para "${nextRole}". Isso pode remover privilégios administrativos na sessão atual. Deseja continuar?`
+      : `Deseja alterar a função de ${target.name} para "${nextRole}"?`;
+
+    if (!confirm(confirmationMessage)) return;
+
     try {
       await updateUserRole(target.id, nextRole);
       await loadUsers();
@@ -86,8 +93,7 @@ export default function UsersManager() {
                     </span>
                     <button
                       onClick={() => void handleRoleChange(entry)}
-                      disabled={isSelf}
-                      className="text-xs px-3 py-1.5 rounded border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 disabled:opacity-50"
+                      className="text-xs px-3 py-1.5 rounded border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100"
                     >
                       {entry.role === 'admin' ? 'Tornar operator' : 'Tornar admin'}
                     </button>

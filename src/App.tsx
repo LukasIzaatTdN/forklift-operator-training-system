@@ -39,6 +39,7 @@ const adminPages = new Set<Page>([
   'admin-tickets',
   'admin-reports',
   'admin-settings',
+  'admin-videoaulas',
 ]);
 
 function MainApp() {
@@ -71,7 +72,9 @@ function MainApp() {
         case 'admin-reports':
           return <Reports />;
         case 'admin-settings':
-          return <AdminSettings />;
+          return <AdminSettings onNavigateToVideoAulas={() => setCurrentPage('admin-videoaulas')} />;
+        case 'admin-videoaulas':
+          return <VideoAulas isAdmin={true} />;
         default:
           return <AdminDashboard />;
       }
@@ -114,6 +117,7 @@ function MainApp() {
     'admin-tickets': 'Chamados',
     'admin-reports': 'Relatórios',
     'admin-settings': 'Configurações',
+    'admin-videoaulas': 'Gestão de Videoaulas',
   };
 
   return (
