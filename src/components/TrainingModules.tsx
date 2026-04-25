@@ -7,6 +7,8 @@ import { moduleImages } from '../data/moduleImages';
 export default function TrainingModules() {
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [expandedLesson, setExpandedLesson] = useState<string | null>(null);
+  const [lessonContentState, setLessonContentState] = useState<Record<string, 'aberto' | 'fechado'>>({});
+  const [lessonQuizState, setLessonQuizState] = useState<Record<string, 'aberto' | 'fechado'>>({});
   const [lessonAnswers, setLessonAnswers] = useState<Record<string, number>>({});
   const [lessonResult, setLessonResult] = useState<Record<string, 'correct' | 'wrong'>>({});
 
@@ -26,6 +28,8 @@ export default function TrainingModules() {
     const quiz = lessonMicroQuizzes[lessonId];
     if (!quiz) return;
 
+    setLessonContentState((prev) => ({ ...prev, [lessonId]: 'fechado' }));
+    setLessonQuizState((prev) => ({ ...prev, [lessonId]: 'aberto' }));
     setLessonAnswers((prev) => ({ ...prev, [lessonId]: answerIndex }));
 
     const isCorrect = answerIndex === quiz.correctAnswer;
@@ -118,11 +122,22 @@ export default function TrainingModules() {
             const done = completedLessonIds.includes(lesson.id);
             const answer = lessonAnswers[lesson.id];
             const result = lessonResult[lesson.id];
+            const contentState = lessonContentState[lesson.id] || 'aberto';
+            const contentExpanded = contentState === 'aberto';
+            const quizState = lessonQuizState[lesson.id] || 'fechado';
+            const quizExpanded = quizState === 'aberto';
 
             return (
               <div key={lesson.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                 <button
-                  onClick={() => setExpandedLesson(expandedLesson === lesson.id ? null : lesson.id)}
+                  onClick={() => {
+                    const isClosing = expandedLesson === lesson.id;
+                    setExpandedLesson(isClosing ? null : lesson.id);
+                    if (!isClosing) {
+                      setLessonContentState((prev) => ({ ...prev, [lesson.id]: prev[lesson.id] || 'aberto' }));
+                      setLessonQuizState((prev) => ({ ...prev, [lesson.id]: 'fechado' }));
+                    }
+                  }}
                   className="w-full flex items-center justify-between p-5 text-left hover:bg-gray-50 transition-colors"
                 >
                   <div className="flex items-center gap-3">
@@ -152,73 +167,124 @@ export default function TrainingModules() {
 
                 {expandedLesson === lesson.id && (
                   <div className="px-5 pb-5 space-y-4 border-t border-gray-100 pt-4">
-                    <ul className="space-y-3">
-                      {lesson.content.map((item, i) => (
-                        <li key={i} className="flex items-start gap-2 text-sm text-gray-700 leading-relaxed">
-                          <span className="text-amber-500 mt-1 shrink-0">●</span>
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs text-gray-500 font-medium">
+                        Conteúdo da lição: <span className="font-semibold">{contentState}</span>
+                      </p>
+                      <button
+                        onClick={() =>
+                          setLessonContentState((prev) => ({
+                            ...prev,
+                            [lesson.id]: contentExpanded ? 'fechado' : 'aberto',
+                          }))
+                        }
+                        className="text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50"
+                      >
+                        {contentExpanded ? 'Minimizar conteúdo' : 'Reabrir conteúdo'}
+                      </button>
+                    </div>
 
-                    {lesson.highlights && lesson.highlights.length > 0 && (
-                      <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-                        <h4 className="text-sm font-bold text-green-800 mb-2 flex items-center gap-1">✅ Pontos Importantes</h4>
-                        <ul className="space-y-2">
-                          {lesson.highlights.map((h, i) => (
-                            <li key={i} className="text-sm text-green-700 flex items-start gap-2">
-                              <span className="text-green-500 mt-0.5 shrink-0">✔</span>
-                              <span>{h}</span>
+                    <div
+                      className={`overflow-hidden transition-all duration-500 ${
+                        contentExpanded ? 'aberto max-h-[1400px] opacity-100' : 'fechado max-h-0 opacity-0'
+                      }`}
+                      aria-hidden={!contentExpanded}
+                    >
+                      <div className="space-y-4 pb-1">
+                        <ul className="space-y-3">
+                          {lesson.content.map((item, i) => (
+                            <li key={i} className="flex items-start gap-2 text-sm text-gray-700 leading-relaxed">
+                              <span className="text-amber-500 mt-1 shrink-0">●</span>
+                              <span>{item}</span>
                             </li>
                           ))}
                         </ul>
-                      </div>
-                    )}
 
-                    {lesson.warnings && lesson.warnings.length > 0 && (
-                      <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                        <h4 className="text-sm font-bold text-red-800 mb-2 flex items-center gap-1">⚠️ Atenção</h4>
-                        <ul className="space-y-2">
-                          {lesson.warnings.map((w, i) => (
-                            <li key={i} className="text-sm text-red-700 flex items-start gap-2">
-                              <span className="text-red-500 mt-0.5 shrink-0">🚨</span>
-                              <span>{w}</span>
-                            </li>
-                          ))}
-                        </ul>
+                        {lesson.highlights && lesson.highlights.length > 0 && (
+                          <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                            <h4 className="text-sm font-bold text-green-800 mb-2 flex items-center gap-1">✅ Pontos Importantes</h4>
+                            <ul className="space-y-2">
+                              {lesson.highlights.map((h, i) => (
+                                <li key={i} className="text-sm text-green-700 flex items-start gap-2">
+                                  <span className="text-green-500 mt-0.5 shrink-0">✔</span>
+                                  <span>{h}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {lesson.warnings && lesson.warnings.length > 0 && (
+                          <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                            <h4 className="text-sm font-bold text-red-800 mb-2 flex items-center gap-1">⚠️ Atenção</h4>
+                            <ul className="space-y-2">
+                              {lesson.warnings.map((w, i) => (
+                                <li key={i} className="text-sm text-red-700 flex items-start gap-2">
+                                  <span className="text-red-500 mt-0.5 shrink-0">🚨</span>
+                                  <span>{w}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
                       </div>
-                    )}
+                    </div>
 
                     {quiz && (
-                      <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
+                      <div
+                        className="bg-indigo-50 border border-indigo-200 rounded-xl p-4"
+                        onClick={() =>
+                          setLessonContentState((prev) => ({ ...prev, [lesson.id]: 'fechado' }))
+                        }
+                      >
                         <h4 className="text-sm font-bold text-indigo-900 mb-2">🧪 Microquiz da Lição</h4>
-                        <p className="text-sm text-indigo-800 mb-3">{quiz.question}</p>
-                        <div className="space-y-2">
-                          {quiz.options.map((option, optionIndex) => (
-                            <button
-                              key={optionIndex}
-                              onClick={() => handleMicroQuizAnswer(currentModule.id, lesson.id, optionIndex)}
-                              className={`w-full text-left text-sm p-3 rounded-lg border transition-colors ${
-                                answer === optionIndex
-                                  ? optionIndex === quiz.correctAnswer
-                                    ? 'bg-green-50 border-green-300 text-green-800'
-                                    : 'bg-red-50 border-red-300 text-red-800'
-                                  : 'bg-white border-indigo-100 hover:bg-indigo-100 text-gray-700'
-                              }`}
-                            >
-                              {option}
-                            </button>
-                          ))}
+                        <div className="mb-3">
+                          <button
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setLessonContentState((prev) => ({ ...prev, [lesson.id]: 'fechado' }));
+                              setLessonQuizState((prev) => ({ ...prev, [lesson.id]: 'aberto' }));
+                            }}
+                            className="text-xs px-3 py-1.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
+                          >
+                            Iniciar Microquiz
+                          </button>
                         </div>
+                        {quizExpanded ? (
+                          <>
+                            <p className="text-sm text-indigo-800 mb-3">{quiz.question}</p>
+                            <div className="space-y-2">
+                              {quiz.options.map((option, optionIndex) => (
+                                <button
+                                  key={optionIndex}
+                                  onClick={() => handleMicroQuizAnswer(currentModule.id, lesson.id, optionIndex)}
+                                  className={`w-full text-left text-sm p-3 rounded-lg border transition-colors ${
+                                    answer === optionIndex
+                                      ? optionIndex === quiz.correctAnswer
+                                        ? 'bg-green-50 border-green-300 text-green-800'
+                                        : 'bg-red-50 border-red-300 text-red-800'
+                                      : 'bg-white border-indigo-100 hover:bg-indigo-100 text-gray-700'
+                                  }`}
+                                >
+                                  {option}
+                                </button>
+                              ))}
+                            </div>
 
-                        {result === 'correct' && (
-                          <p className="mt-3 text-sm text-green-700 font-medium">
-                            ✅ Correto! Lição marcada como concluída. {quiz.explanation}
-                          </p>
-                        )}
-                        {result === 'wrong' && (
-                          <p className="mt-3 text-sm text-red-700 font-medium">
-                            ❌ Resposta incorreta. Revise os pontos principais e tente novamente.
+                            {result === 'correct' && (
+                              <p className="mt-3 text-sm text-green-700 font-medium">
+                                ✅ Correto! Lição marcada como concluída. {quiz.explanation}
+                              </p>
+                            )}
+                            {result === 'wrong' && (
+                              <p className="mt-3 text-sm text-red-700 font-medium">
+                                ❌ Resposta incorreta. Revise os pontos principais e tente novamente.
+                              </p>
+                            )}
+                          </>
+                        ) : (
+                          <p className="text-xs text-indigo-700 bg-indigo-100 px-3 py-2 rounded-lg">
+                            Clique em "Iniciar Microquiz" para abrir as perguntas.
                           </p>
                         )}
                       </div>
