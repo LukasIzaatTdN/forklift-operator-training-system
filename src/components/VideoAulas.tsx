@@ -1,12 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { VideoLesson } from '../types';
-import { defaultVideos } from '../data/videos';
+import { removeVideoLesson, subscribeVideoLessons, upsertVideoLesson } from '../lib/videoLessons';
 
 interface VideoAulasProps {
   isAdmin: boolean;
 }
-
-const STORAGE_KEY = 'empilhapro_videos';
 
 const categories = [
   { id: 'todas', label: 'Todas', emoji: '🎬', color: 'from-violet-500 to-purple-600', bg: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-200', ring: 'ring-violet-500' },
@@ -77,26 +75,23 @@ export default function VideoAulas({ isAdmin }: VideoAulasProps) {
   const [formCategory, setFormCategory] = useState('operacao');
   const [formDuration, setFormDuration] = useState('');
   const [formError, setFormError] = useState('');
+  const [loadingVideos, setLoadingVideos] = useState(true);
+  const [savingVideo, setSavingVideo] = useState(false);
 
-  // Load videos
+  // Load videos (tempo real)
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored) as VideoLesson[];
-        setVideos(parsed);
-      } catch {
-        setVideos(defaultVideos);
+    const unsubscribe = subscribeVideoLessons(
+      (nextVideos) => {
+        setVideos(nextVideos);
+        setLoadingVideos(false);
+      },
+      () => {
+        setFormError('Falha ao sincronizar videoaulas em tempo real.');
+        setLoadingVideos(false);
       }
-    } else {
-      setVideos(defaultVideos);
-    }
-  }, []);
+    );
 
-  // Save videos
-  const saveVideos = useCallback((newVideos: VideoLesson[]) => {
-    setVideos(newVideos);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newVideos));
+    return unsubscribe;
   }, []);
 
   // Filter videos
@@ -110,7 +105,7 @@ export default function VideoAulas({ isAdmin }: VideoAulasProps) {
   });
 
   // Handle add/edit video
-  const handleSaveVideo = () => {
+  const handleSaveVideo = async () => {
     setFormError('');
 
     if (!formTitle.trim()) {
@@ -128,34 +123,27 @@ export default function VideoAulas({ isAdmin }: VideoAulasProps) {
       return;
     }
 
-    if (editingVideoId) {
-      const updatedVideos = videos.map((video) => {
-        if (video.id !== editingVideoId) return video;
-        return {
-          ...video,
-          title: formTitle.trim(),
-          description: formDescription.trim() || 'Videoaula adicionada pelo usuário.',
-          url: formUrl.trim(),
-          category: formCategory,
-          duration: formDuration.trim() || '—:—',
-        };
-      });
-      saveVideos(updatedVideos);
-    } else {
-      const newVideo: VideoLesson = {
-        id: `custom-${Date.now()}`,
+    setSavingVideo(true);
+    try {
+      const existingVideo = editingVideoId ? videos.find((video) => video.id === editingVideoId) : null;
+      const videoToSave: VideoLesson = {
+        id: editingVideoId || `custom-${Date.now()}`,
         title: formTitle.trim(),
         description: formDescription.trim() || 'Videoaula adicionada pelo usuário.',
         url: formUrl.trim(),
         category: formCategory,
         duration: formDuration.trim() || '—:—',
-        addedAt: Date.now(),
+        addedAt: existingVideo?.addedAt || Date.now(),
       };
-      saveVideos([...videos, newVideo]);
-    }
 
-    resetForm();
-    setShowAddModal(false);
+      await upsertVideoLesson(videoToSave);
+      resetForm();
+      setShowAddModal(false);
+    } catch {
+      setFormError('Não foi possível salvar a videoaula. Tente novamente.');
+    } finally {
+      setSavingVideo(false);
+    }
   };
 
   const resetForm = () => {
@@ -184,12 +172,16 @@ export default function VideoAulas({ isAdmin }: VideoAulasProps) {
     setShowAddModal(true);
   };
 
-  const handleDeleteVideo = (id: string) => {
-    const updated = videos.filter((v) => v.id !== id);
-    saveVideos(updated);
-    setShowDeleteConfirm(null);
-    if (selectedVideo?.id === id) {
-      setSelectedVideo(null);
+  const handleDeleteVideo = async (id: string) => {
+    try {
+      await removeVideoLesson(id);
+      setShowDeleteConfirm(null);
+      if (selectedVideo?.id === id) {
+        setSelectedVideo(null);
+      }
+    } catch {
+      setFormError('Não foi possível remover a videoaula.');
+      setShowDeleteConfirm(null);
     }
   };
 
@@ -392,10 +384,11 @@ export default function VideoAulas({ isAdmin }: VideoAulasProps) {
               Cancelar
             </button>
             <button
-              onClick={handleSaveVideo}
+              onClick={() => void handleSaveVideo()}
+              disabled={savingVideo}
               className="flex-1 px-4 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-xl text-sm font-medium hover:from-violet-700 hover:to-purple-700 transition-all shadow-md shadow-violet-200"
             >
-              {isEditing ? '💾 Salvar Alterações' : '➕ Adicionar Videoaula'}
+              {savingVideo ? 'Salvando...' : isEditing ? '💾 Salvar Alterações' : '➕ Adicionar Videoaula'}
             </button>
           </div>
         </div>
@@ -476,7 +469,9 @@ export default function VideoAulas({ isAdmin }: VideoAulasProps) {
       {/* Results Count */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-gray-500">
-          {filteredVideos.length} videoaula{filteredVideos.length !== 1 ? 's' : ''} encontrada{filteredVideos.length !== 1 ? 's' : ''}
+          {loadingVideos
+            ? 'Sincronizando videoaulas...'
+            : `${filteredVideos.length} videoaula${filteredVideos.length !== 1 ? 's' : ''} encontrada${filteredVideos.length !== 1 ? 's' : ''}`}
         </p>
         {selectedCategory !== 'todas' && (
           <button
@@ -645,7 +640,7 @@ export default function VideoAulas({ isAdmin }: VideoAulasProps) {
                 Cancelar
               </button>
               <button
-                onClick={() => handleDeleteVideo(showDeleteConfirm)}
+                onClick={() => void handleDeleteVideo(showDeleteConfirm)}
                 className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl text-sm font-medium hover:bg-red-700 transition-colors"
               >
                 Remover

@@ -96,6 +96,12 @@ service cloud.firestore {
       allow update: if isAdmin() || validTokenConsumeUpdate();
     }
 
+    // VIDEOAULAS
+    match /video_lessons/{videoId} {
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
     // CHAMADOS
     match /tickets/{ticketId} {
       // Admin controla tudo

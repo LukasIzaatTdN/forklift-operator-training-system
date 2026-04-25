@@ -2,9 +2,7 @@ import { useState, useEffect } from 'react';
 import { dailyTips } from '../data/tips';
 import { quizQuestions } from '../data/quiz';
 import { trainingModules } from '../data/modules';
-import { defaultVideos } from '../data/videos';
-
-const STORAGE_KEY = 'empilhapro_videos';
+import { subscribeVideoLessons } from '../lib/videoLessons';
 
 interface DashboardProps {
   onNavigate: (page: 'tracks' | 'modules' | 'tips' | 'quiz' | 'checklist' | 'videoaulas' | 'training-report') => void;
@@ -12,7 +10,7 @@ interface DashboardProps {
 
 export default function Dashboard({ onNavigate }: DashboardProps) {
   const [tipOfDay, setTipOfDay] = useState(0);
-  const [totalVideos, setTotalVideos] = useState(defaultVideos.length);
+  const [totalVideos, setTotalVideos] = useState(0);
 
   useEffect(() => {
     const dayOfYear = Math.floor(
@@ -20,15 +18,12 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
     );
     setTipOfDay(dayOfYear % dailyTips.length);
 
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        setTotalVideos(parsed.length);
-      } catch {
-        setTotalVideos(defaultVideos.length);
-      }
-    }
+    const unsubscribe = subscribeVideoLessons(
+      (videos) => setTotalVideos(videos.length),
+      () => setTotalVideos(0)
+    );
+
+    return unsubscribe;
   }, []);
 
   const currentTip = dailyTips[tipOfDay];
