@@ -1,5 +1,7 @@
+import { BRAND } from '../config/brand';
 import { useAuth } from '../context/AuthContext';
 import { User } from '../types';
+import AppLogo from './AppLogo';
 
 export type OperatorPage =
   | 'dashboard'
@@ -74,13 +76,12 @@ export default function Sidebar({ currentPage, onNavigate, isOpen, onClose, user
       >
         <div className="flex flex-col h-full">
           <div className="p-6 bg-gradient-to-r from-yellow-500 to-amber-500">
-            <div className="flex items-center gap-3">
-              <div className="text-4xl">🚜</div>
-              <div>
-                <h1 className="text-lg font-bold text-white">Tropa do Garfo</h1>
-                <p className="text-xs text-yellow-100">{isAdmin ? 'Painel Administrativo' : 'Treinamento Operadores'}</p>
-              </div>
-            </div>
+            <AppLogo
+              size="md"
+              tone="light"
+              name={BRAND.name}
+              subtitle={isAdmin ? 'Painel Administrativo' : 'Treinamento Operadores'}
+            />
           </div>
 
           {user && (

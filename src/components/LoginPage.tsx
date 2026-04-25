@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
+import { BRAND } from '../config/brand';
 import { useAuth, getAvailableUsers } from '../context/AuthContext';
 import { createCheckoutPayment, getTokenByPayment } from '../lib/paymentApi';
+import AppLogo from './AppLogo';
 
 type AuthTab = 'login' | 'register';
 
@@ -126,12 +128,13 @@ export default function LoginPage() {
       </div>
 
       <div className="relative w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-amber-400 to-yellow-500 rounded-2xl shadow-xl shadow-amber-500/30 mb-4">
-            <span className="text-4xl">🚜</span>
-          </div>
-          <h1 className="text-3xl font-bold text-white">Tropa do Garfo</h1>
-          <p className="text-slate-400 text-sm mt-1">Sistema de Aperfeiçoamento para Operadores</p>
+        <div className="mb-8">
+          <AppLogo
+            size="xl"
+            tone="light"
+            align="center"
+            subtitle={BRAND.subtitle}
+          />
         </div>
 
         <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/10 shadow-2xl overflow-hidden">

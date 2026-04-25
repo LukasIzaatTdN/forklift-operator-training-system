@@ -17,6 +17,8 @@ import TokenManager from './components/TokenManager';
 import Reports from './components/Reports';
 import AdminTickets from './components/AdminTickets';
 import AdminSettings from './components/AdminSettings';
+import AppLogo from './components/AppLogo';
+import { BRAND } from './config/brand';
 
 const operatorDefaultPage: OperatorPage = 'dashboard';
 const adminDefaultPage: AdminPage = 'admin-dashboard';
@@ -145,9 +147,8 @@ function MainApp() {
               <h2 className="text-lg font-bold text-gray-900">{pageTitles[currentPage]}</h2>
             </div>
             <div className="flex items-center gap-3">
-              <div className="hidden sm:flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5">
-                <span className="text-sm">🚜</span>
-                <span className="text-xs font-medium text-amber-700">EmpilhaPro</span>
+              <div className="hidden sm:flex items-center bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5">
+                <AppLogo size="sm" tone="amber" name={BRAND.shortName} />
               </div>
               {user && (
                 <div
