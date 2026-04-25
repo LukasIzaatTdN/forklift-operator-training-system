@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { BRAND } from '../config/brand';
 import { cn } from '../utils/cn';
 
@@ -59,15 +59,24 @@ export default function AppLogo({
   align = 'left',
   name = BRAND.name,
   subtitle,
-  logoSrc = BRAND.logoUrl,
+  logoSrc = null,
   logoAlt = `Logo ${BRAND.name}`,
   className,
 }: AppLogoProps) {
   const textTone = toneMap[tone];
   const isCentered = align === 'center';
-  const [logoLoadFailed, setLogoLoadFailed] = useState(false);
-  const showExternalLogo = Boolean(logoSrc) && !logoLoadFailed;
-  const normalizedLogoSrc = useMemo(() => (logoSrc ? logoSrc.trim() : ''), [logoSrc]);
+  const candidateLogoSrcs = useMemo(() => {
+    if (logoSrc) return [logoSrc.trim()];
+    return [BRAND.logoExternalUrl, BRAND.logoInternalPath]
+      .map((value) => (value ? value.trim() : ''))
+      .filter(Boolean);
+  }, [logoSrc]);
+  const [logoIndex, setLogoIndex] = useState(0);
+  const activeLogoSrc = candidateLogoSrcs[logoIndex] || '';
+
+  useEffect(() => {
+    setLogoIndex(0);
+  }, [candidateLogoSrcs]);
 
   return (
     <div
@@ -77,12 +86,12 @@ export default function AppLogo({
         className
       )}
     >
-      {showExternalLogo ? (
+      {activeLogoSrc ? (
         <img
-          src={normalizedLogoSrc}
+          src={activeLogoSrc}
           alt={logoAlt}
           className={cn('rounded-2xl object-cover shadow-lg ring-1 ring-black/5', iconSizeMap[size])}
-          onError={() => setLogoLoadFailed(true)}
+          onError={() => setLogoIndex((current) => current + 1)}
           loading="eager"
         />
       ) : (
