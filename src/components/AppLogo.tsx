@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { BRAND } from '../config/brand';
+import { subscribeBrandingConfig, type BrandingConfig } from '../lib/branding';
 import { cn } from '../utils/cn';
 
 type LogoSize = 'sm' | 'md' | 'lg' | 'xl';
@@ -65,14 +66,25 @@ export default function AppLogo({
 }: AppLogoProps) {
   const textTone = toneMap[tone];
   const isCentered = align === 'center';
+  const [brandingConfig, setBrandingConfig] = useState<BrandingConfig>({
+    logoExternalUrl: BRAND.logoExternalUrl,
+    logoInternalPath: BRAND.logoInternalPath,
+  });
   const candidateLogoSrcs = useMemo(() => {
     if (logoSrc) return [logoSrc.trim()];
-    return [BRAND.logoExternalUrl, BRAND.logoInternalPath]
+    return [brandingConfig.logoExternalUrl, brandingConfig.logoInternalPath]
       .map((value) => (value ? value.trim() : ''))
       .filter(Boolean);
-  }, [logoSrc]);
+  }, [brandingConfig.logoExternalUrl, brandingConfig.logoInternalPath, logoSrc]);
   const [logoIndex, setLogoIndex] = useState(0);
   const activeLogoSrc = candidateLogoSrcs[logoIndex] || '';
+
+  useEffect(() => {
+    const unsubscribe = subscribeBrandingConfig((nextConfig) => {
+      setBrandingConfig(nextConfig);
+    });
+    return unsubscribe;
+  }, []);
 
   useEffect(() => {
     setLogoIndex(0);

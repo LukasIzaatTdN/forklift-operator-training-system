@@ -102,6 +102,13 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    // CONFIGURAÇÕES PÚBLICAS DE BRANDING
+    match /app_config/{configId} {
+      allow get: if configId == 'branding';
+      allow list: if false;
+      allow create, update, delete: if configId == 'branding' && isAdmin();
+    }
+
     // CHAMADOS
     match /tickets/{ticketId} {
       // Admin controla tudo
