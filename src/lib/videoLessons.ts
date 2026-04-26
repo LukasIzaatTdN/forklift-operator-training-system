@@ -14,13 +14,30 @@ import { firestoreDb } from './firebase';
 
 const STORAGE_KEY = 'empilhapro_videos';
 const COLLECTION = 'video_lessons';
+const DEFAULT_VIDEO_MAP = new Map(defaultVideos.map((video) => [video.id, video]));
+
+type StoredVideoLesson = Partial<VideoLesson> & {
+  id: string;
+  deleted?: boolean;
+};
+
+function isCompleteVideoLesson(video: StoredVideoLesson): video is VideoLesson {
+  return (
+    typeof video.title === 'string' &&
+    typeof video.description === 'string' &&
+    typeof video.url === 'string' &&
+    typeof video.category === 'string' &&
+    typeof video.duration === 'string' &&
+    typeof video.addedAt === 'number'
+  );
+}
 
 function sortByAddedAtDesc(items: VideoLesson[]): VideoLesson[] {
   return [...items].sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
 }
 
 // Mescla defaults com overrides/custom vindos do banco.
-export function mergeDefaultWithStored(storedVideos: VideoLesson[]): VideoLesson[] {
+export function mergeDefaultWithStored(storedVideos: StoredVideoLesson[]): VideoLesson[] {
   const map = new Map<string, VideoLesson>();
 
   for (const video of defaultVideos) {
@@ -28,7 +45,15 @@ export function mergeDefaultWithStored(storedVideos: VideoLesson[]): VideoLesson
   }
 
   for (const video of storedVideos) {
-    map.set(video.id, video);
+    if (video.deleted) {
+      map.delete(video.id);
+      continue;
+    }
+
+    if (!isCompleteVideoLesson(video)) continue;
+
+    const base = map.get(video.id);
+    map.set(video.id, base ? { ...base, ...video } : video);
   }
 
   return sortByAddedAtDesc(Array.from(map.values()));
@@ -63,7 +88,7 @@ export function subscribeVideoLessons(
   return onSnapshot(
     q,
     (snapshot) => {
-      const storedVideos = snapshot.docs.map((item) => item.data() as VideoLesson);
+      const storedVideos = snapshot.docs.map((item) => item.data() as StoredVideoLesson);
       onChange(mergeDefaultWithStored(storedVideos));
     },
     (error) => {
@@ -82,7 +107,7 @@ export async function upsertVideoLesson(video: VideoLesson): Promise<void> {
     return;
   }
 
-  await setDoc(doc(firestoreDb, COLLECTION, video.id), video, { merge: true });
+  await setDoc(doc(firestoreDb, COLLECTION, video.id), { ...video, deleted: false }, { merge: true });
 }
 
 export async function removeVideoLesson(videoId: string): Promise<void> {
@@ -90,6 +115,16 @@ export async function removeVideoLesson(videoId: string): Promise<void> {
     const current = loadVideosFromLocalStorage();
     const updated = current.filter((item) => item.id !== videoId);
     saveVideosToLocalStorage(updated);
+    return;
+  }
+
+  const defaultVideo = DEFAULT_VIDEO_MAP.get(videoId);
+  if (defaultVideo) {
+    await setDoc(
+      doc(firestoreDb, COLLECTION, videoId),
+      { ...defaultVideo, deleted: true, addedAt: Date.now() },
+      { merge: true }
+    );
     return;
   }
 

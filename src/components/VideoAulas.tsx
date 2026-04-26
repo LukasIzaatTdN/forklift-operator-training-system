@@ -186,6 +186,7 @@ export default function VideoAulas({ isAdmin }: VideoAulasProps) {
   };
 
   const isDefaultVideo = (id: string) => id.startsWith('default-');
+  const deletingVideo = showDeleteConfirm ? videos.find((video) => video.id === showDeleteConfirm) : null;
 
   // Video player modal
   const VideoPlayerModal = () => {
@@ -591,21 +592,18 @@ export default function VideoAulas({ isAdmin }: VideoAulasProps) {
                             />
                           </svg>
                         </button>
-                        {/* Delete button only for custom videos */}
-                        {!isDefaultVideo(video.id) && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setShowDeleteConfirm(video.id);
-                            }}
-                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                            title="Remover videoaula"
-                          >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
-                        )}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowDeleteConfirm(video.id);
+                          }}
+                          className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Remover videoaula"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
                       </div>
                     )}
                   </div>
@@ -630,7 +628,11 @@ export default function VideoAulas({ isAdmin }: VideoAulasProps) {
                 </svg>
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-1">Remover Videoaula?</h3>
-              <p className="text-sm text-gray-500">Esta ação não pode ser desfeita.</p>
+              <p className="text-sm text-gray-500">
+                {deletingVideo && isDefaultVideo(deletingVideo.id)
+                  ? 'Este vídeo padrão será ocultado para os usuários.'
+                  : 'Esta ação não pode ser desfeita.'}
+              </p>
             </div>
             <div className="px-6 pb-6 flex gap-3">
               <button
