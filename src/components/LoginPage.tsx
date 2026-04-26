@@ -12,7 +12,8 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [loginSuccess, setLoginSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -20,9 +21,12 @@ export default function LoginPage() {
   const [registerEmail, setRegisterEmail] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
   const [registerToken, setRegisterToken] = useState('');
+  const [registerError, setRegisterError] = useState('');
   const [registerSuccess, setRegisterSuccess] = useState('');
   const [buyName, setBuyName] = useState('');
   const [buyEmail, setBuyEmail] = useState('');
+  const [buyError, setBuyError] = useState('');
+  const [buySuccess, setBuySuccess] = useState('');
   const [buyLoading, setBuyLoading] = useState(false);
 
   useEffect(() => {
@@ -41,7 +45,7 @@ export default function LoginPage() {
     void (async () => {
       const result = await getTokenByPayment(paymentId, payerEmail);
       if (!result.success || !result.data?.token) {
-        setError(
+        setRegisterError(
           result.error ||
             'Pagamento aprovado, mas o token ainda não foi liberado. Aguarde alguns segundos e tente novamente.'
         );
@@ -50,7 +54,9 @@ export default function LoginPage() {
 
       setRegisterToken(result.data.token);
       setRegisterSuccess('Pagamento aprovado! Token preenchido automaticamente para finalizar seu cadastro.');
-      setError('');
+      setRegisterError('');
+      setBuySuccess('Pagamento confirmado. Você já pode concluir o cadastro abaixo.');
+      setBuyError('');
       localStorage.removeItem('checkout_email');
       window.history.replaceState({}, '', window.location.pathname);
     })();
@@ -58,27 +64,32 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setLoginError('');
+    setLoginSuccess('');
     setLoading(true);
 
     await new Promise((resolve) => setTimeout(resolve, 400));
 
     const result = await login(email, password);
     if (!result.success) {
-      setError(result.error || 'Erro ao fazer login.');
+      setLoginError(result.error || 'Erro ao fazer login.');
+    } else {
+      setLoginSuccess('Login realizado com sucesso. Redirecionando...');
     }
     setLoading(false);
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setRegisterError('');
     setRegisterSuccess('');
+    setBuyError('');
+    setBuySuccess('');
     setLoading(true);
 
     const result = await registerWithToken(registerName, registerEmail, registerPassword, registerToken);
     if (!result.success) {
-      setError(result.error || 'Falha ao criar conta.');
+      setRegisterError(result.error || 'Falha ao criar conta.');
       setLoading(false);
       return;
     }
@@ -90,32 +101,43 @@ export default function LoginPage() {
   const quickLogin = async (userEmail: string, userPassword: string) => {
     setEmail(userEmail);
     setPassword(userPassword);
-    setError('');
+    setLoginError('');
+    setLoginSuccess('');
 
     const result = await login(userEmail, userPassword);
     if (!result.success) {
-      setError(result.error || 'Erro ao fazer login.');
+      setLoginError(result.error || 'Erro ao fazer login.');
+    } else {
+      setLoginSuccess('Login realizado com sucesso. Redirecionando...');
     }
   };
 
   const handleBuyAccess = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setBuyError('');
+    setBuySuccess('');
+    setRegisterError('');
     setRegisterSuccess('');
     setBuyLoading(true);
 
+    const normalizedEmail = buyEmail.trim().toLowerCase();
+
     const result = await createCheckoutPayment({
       name: buyName.trim(),
-      email: buyEmail.trim().toLowerCase(),
+      email: normalizedEmail,
     });
     setBuyLoading(false);
 
     if (!result.success || !result.data?.checkoutUrl) {
-      setError(result.error || 'Falha ao iniciar pagamento.');
+      setBuyError(
+        result.error ||
+          'Não foi possível iniciar o pagamento agora. Verifique seus dados e tente novamente.'
+      );
       return;
     }
 
-    localStorage.setItem('checkout_email', buyEmail.trim().toLowerCase());
+    setBuySuccess('Tudo certo! Você será redirecionado para o pagamento seguro.');
+    localStorage.setItem('checkout_email', normalizedEmail);
     window.location.href = result.data.checkoutUrl;
   };
 
@@ -152,7 +174,8 @@ export default function LoginPage() {
                   type="button"
                   onClick={() => {
                     setTab('login');
-                    setError('');
+                    setLoginError('');
+                    setRegisterError('');
                   }}
                   className={`text-sm rounded-lg px-3 py-2 transition-colors ${
                     tab === 'login' ? 'bg-white text-slate-900 font-semibold' : 'text-slate-200 hover:bg-white/10'
@@ -164,7 +187,8 @@ export default function LoginPage() {
                   type="button"
                   onClick={() => {
                     setTab('register');
-                    setError('');
+                    setLoginError('');
+                    setRegisterError('');
                   }}
                   className={`text-sm rounded-lg px-3 py-2 transition-colors ${
                     tab === 'register' ? 'bg-white text-slate-900 font-semibold' : 'text-slate-200 hover:bg-white/10'
@@ -178,10 +202,16 @@ export default function LoginPage() {
 
           {tab === 'login' ? (
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              {error && (
+              {loginError && (
                 <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 flex items-start gap-2">
                   <span className="text-red-400 text-sm mt-0.5">⚠️</span>
-                  <p className="text-sm text-red-300">{error}</p>
+                  <p className="text-sm text-red-300">{loginError}</p>
+                </div>
+              )}
+              {loginSuccess && (
+                <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 flex items-start gap-2">
+                  <span className="text-emerald-300 text-sm mt-0.5">✅</span>
+                  <p className="text-sm text-emerald-200">{loginSuccess}</p>
                 </div>
               )}
 
@@ -228,9 +258,9 @@ export default function LoginPage() {
             </form>
           ) : (
             <form onSubmit={handleRegister} className="p-6 space-y-4">
-              {error && (
+              {registerError && (
                 <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-sm text-red-300">
-                  {error}
+                  {registerError}
                 </div>
               )}
               {registerSuccess && (
@@ -238,6 +268,14 @@ export default function LoginPage() {
                   {registerSuccess}
                 </div>
               )}
+              <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-3">
+                <p className="text-xs font-semibold text-indigo-200 uppercase tracking-wide mb-2">Fluxo de Cadastro</p>
+                <div className="space-y-1.5 text-xs text-indigo-100/90">
+                  <p>1. Compre o acesso na seção abaixo.</p>
+                  <p>2. Após pagamento aprovado, você recebe o token automaticamente.</p>
+                  <p>3. Preencha nome, e-mail, senha e finalize o cadastro.</p>
+                </div>
+              </div>
 
               <div>
                 <label className="block text-sm font-semibold text-slate-300 mb-1.5">Nome</label>
@@ -281,6 +319,9 @@ export default function LoginPage() {
                   placeholder="EMP-XXXX-XXXX"
                   className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 uppercase"
                 />
+                <p className="text-xs text-slate-400 mt-1">
+                  Dica: se o token não preencher sozinho após o pagamento, aguarde alguns segundos e recarregue.
+                </p>
               </div>
 
               <button
@@ -317,14 +358,7 @@ export default function LoginPage() {
               ))}
             </div>
           </div>
-        ) : (
-          <div className="mt-6 bg-blue-500/10 border border-blue-400/20 rounded-xl p-4">
-            <p className="text-sm text-blue-200 font-medium">Autenticação Firebase ativa.</p>
-            <p className="text-xs text-blue-100/80 mt-1">
-              Novas contas só podem ser criadas com token válido (admin ou pagamento aprovado).
-            </p>
-          </div>
-        )}
+        ) : null}
 
         {authMode === 'firebase' && (
           <div className="mt-4 bg-emerald-500/10 border border-emerald-400/20 rounded-xl p-4">
@@ -332,6 +366,24 @@ export default function LoginPage() {
             <p className="text-xs text-emerald-100/80 mb-3">
               Pagamento aprovado libera automaticamente um token de cadastro.
             </p>
+            <div className="bg-slate-900/30 border border-white/10 rounded-lg p-3 mb-3">
+              <p className="text-xs font-semibold text-slate-200 mb-2">Como funciona</p>
+              <div className="space-y-1.5 text-xs text-slate-300">
+                <p>1. Informe nome e e-mail e clique em Comprar acesso.</p>
+                <p>2. Finalize o pagamento em ambiente seguro.</p>
+                <p>3. Você retorna para Criar Conta com token preenchido.</p>
+              </div>
+            </div>
+            {buyError && (
+              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-2.5 text-xs text-red-200 mb-3">
+                {buyError}
+              </div>
+            )}
+            {buySuccess && (
+              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-2.5 text-xs text-emerald-200 mb-3">
+                {buySuccess}
+              </div>
+            )}
             <form onSubmit={handleBuyAccess} className="space-y-2.5">
               <input
                 type="text"
@@ -358,19 +410,6 @@ export default function LoginPage() {
           </div>
         )}
 
-        <div className="mt-6 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4">
-          <h3 className="text-sm font-semibold text-slate-300 mb-3">📋 Permissões por Perfil</h3>
-          <div className="space-y-2">
-            <div className="flex items-start gap-2">
-              <span className="mt-1 text-xs px-2 py-0.5 bg-red-500/20 text-red-300 rounded-full font-medium">Admin</span>
-              <p className="text-xs text-slate-400">Acesso completo e geração de token de cadastro</p>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="mt-1 text-xs px-2 py-0.5 bg-green-500/20 text-green-300 rounded-full font-medium">Operador</span>
-              <p className="text-xs text-slate-400">Acesso aos conteúdos, quizzes e progresso pessoal</p>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
