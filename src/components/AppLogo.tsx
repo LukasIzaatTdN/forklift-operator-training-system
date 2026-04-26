@@ -71,10 +71,13 @@ export default function AppLogo({
     logoInternalPath: BRAND.logoInternalPath,
   });
   const candidateLogoSrcs = useMemo(() => {
-    if (logoSrc) return [logoSrc.trim()];
-    return [brandingConfig.logoExternalUrl, brandingConfig.logoInternalPath]
+    const explicit = logoSrc ? [logoSrc.trim()] : [];
+    const dynamic = [brandingConfig.logoExternalUrl, brandingConfig.logoInternalPath]
       .map((value) => (value ? value.trim() : ''))
       .filter(Boolean);
+
+    const merged = [...explicit, ...dynamic, ...BRAND.logoLocalFallbacks];
+    return Array.from(new Set(merged.filter(Boolean)));
   }, [brandingConfig.logoExternalUrl, brandingConfig.logoInternalPath, logoSrc]);
   const [logoIndex, setLogoIndex] = useState(0);
   const activeLogoSrc = candidateLogoSrcs[logoIndex] || '';

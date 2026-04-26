@@ -9,4 +9,12 @@ export const BRAND = {
     (import.meta.env.VITE_BRAND_LOGO_URL || '').trim() ||
     (import.meta.env.VITE_BRAND_LOGO_INTERNAL_PATH || '').trim() ||
     null,
+  logoLocalFallbacks: [
+    '/logo.png',
+    '/logo.svg',
+    '/logo.jpg',
+    '/logo.jpeg',
+    '/assets/logo.png',
+    '/images/logo.png',
+  ],
 };

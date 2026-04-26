@@ -62,6 +62,10 @@ export default function AdminSettings({ onNavigateToVideoAulas }: AdminSettingsP
           Defina uma logo externa (URL) ou interna (arquivo em <code>/public</code>). As alterações sincronizam em
           tempo real para todo o sistema.
         </p>
+        <p className="text-xs text-gray-500 mb-4">
+          Se os campos ficarem vazios, o sistema tenta localizar automaticamente em:
+          <code> /logo.png</code>, <code>/logo.svg</code>, <code>/assets/logo.png</code> e <code>/images/logo.png</code>.
+        </p>
 
         <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
           <p className="text-xs font-semibold text-amber-800 mb-2">Pré-visualização atual</p>
