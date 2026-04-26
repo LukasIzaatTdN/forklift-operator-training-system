@@ -1,4 +1,4 @@
-# EmpilhaPro - Forklift Operator Training System
+# Tropa do Garfo - Forklift Operator Training System
 
 Sistema web de treinamento para operadores de empilhadeira com trilhas, quiz, progresso e área administrativa.
 

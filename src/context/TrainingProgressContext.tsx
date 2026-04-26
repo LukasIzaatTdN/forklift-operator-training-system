@@ -5,7 +5,7 @@ import { Certificate, QuizAttempt, TrainingTrack, UserTrainingProgress } from '.
 import { CERTIFICATE_VALIDITY_MONTHS, addMonths, isCertificateExpired } from '../utils/certificates';
 import { firestoreDb } from '../lib/firebase';
 
-const STORAGE_KEY = 'empilhapro_training_progress_v1';
+const STORAGE_KEY = 'tropa_do_garfo_training_progress_v1';
 
 interface TrackStatus {
   modulesCompleted: number;

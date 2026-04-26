@@ -12,7 +12,7 @@ import { defaultVideos } from '../data/videos';
 import { VideoLesson } from '../types';
 import { firestoreDb } from './firebase';
 
-const STORAGE_KEY = 'empilhapro_videos';
+const STORAGE_KEY = 'tropa_do_garfo_videos';
 const COLLECTION = 'video_lessons';
 const DEFAULT_VIDEO_MAP = new Map(defaultVideos.map((video) => [video.id, video]));
 

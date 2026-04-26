@@ -39,7 +39,7 @@ const USERS: { email: string; password: string; user: User }[] = [
   },
 ];
 
-const AUTH_STORAGE_KEY = 'empilhapro_auth';
+const AUTH_STORAGE_KEY = 'tropa_do_garfo_auth';
 
 const adminEmails = (import.meta.env.VITE_ADMIN_EMAILS || '')
   .split(',')

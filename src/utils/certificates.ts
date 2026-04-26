@@ -117,7 +117,7 @@ export function printCertificateAsPdf({ certificate, operatorName, operatorRole 
 <body>
   <div class="wrap">
     <section class="cert">
-      <div class="brand">EMPILHAPRO | SISTEMA DE TREINAMENTO</div>
+      <div class="brand">TROPA DO GARFO | SISTEMA DE TREINAMENTO</div>
       <h1>CERTIFICADO</h1>
       <p class="subtitle">Certificamos que o(a) operador(a) concluiu a trilha de treinamento com aprovação.</p>
       <div class="name">${escapeHtml(operatorName)}</div>

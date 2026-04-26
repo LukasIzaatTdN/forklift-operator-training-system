@@ -13,7 +13,7 @@ export default function Checklist() {
   const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem('empilhapro-checklist');
+    const saved = localStorage.getItem('tropa-do-garfo-checklist');
     if (saved) {
       const parsed = JSON.parse(saved);
       // Only restore if it's from today
@@ -33,7 +33,7 @@ export default function Checklist() {
       operatorName: newName,
       completed: newCompleted,
     };
-    localStorage.setItem('empilhapro-checklist', JSON.stringify(data));
+    localStorage.setItem('tropa-do-garfo-checklist', JSON.stringify(data));
   };
 
   const handleCheck = (id: string, status: 'ok' | 'nok') => {
@@ -54,7 +54,7 @@ export default function Checklist() {
     setChecks({});
     setOperatorName('');
     setCompleted(false);
-    localStorage.removeItem('empilhapro-checklist');
+    localStorage.removeItem('tropa-do-garfo-checklist');
   };
 
   const totalItems = checklistItems.length;

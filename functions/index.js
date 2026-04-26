@@ -134,8 +134,8 @@ async function createPaymentIntent(payload) {
     body: {
       items: [
         {
-          id: 'empilhapro-acesso',
-          title: 'Acesso ao EmpilhaPro',
+          id: 'tropa-do-garfo-acesso',
+          title: 'Acesso ao Tropa do Garfo',
           quantity: 1,
           unit_price: amount,
           currency_id: 'BRL',

@@ -9,7 +9,7 @@ import { BRAND } from '../config/brand';
 import { firestoreDb } from './firebase';
 
 const BRANDING_DOC_PATH = ['app_config', 'branding'] as const;
-const BRANDING_STORAGE_KEY = 'empilhapro_branding_config';
+const BRANDING_STORAGE_KEY = 'tropa_do_garfo_branding_config';
 
 export interface BrandingConfig {
   logoExternalUrl: string | null;

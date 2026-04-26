@@ -93,7 +93,7 @@ export async function createPaymentIntent(payload, req) {
         price_data: {
           currency: 'brl',
           product_data: {
-            name: 'Acesso ao EmpilhaPro',
+            name: 'Acesso ao Tropa do Garfo',
           },
           unit_amount: Math.round(amount * 100),
         },
