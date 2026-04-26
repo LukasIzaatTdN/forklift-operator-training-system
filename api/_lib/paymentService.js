@@ -297,6 +297,13 @@ async function readRawBody(req) {
 export async function handleStripeWebhook(req) {
   const stripe = stripeClient();
   const webhookSecret = String(process.env.STRIPE_WEBHOOK_SECRET || '').trim();
+  const isProductionEnv =
+    String(process.env.VERCEL_ENV || '').trim() === 'production' ||
+    String(process.env.NODE_ENV || '').trim() === 'production';
+
+  if (isProductionEnv && !webhookSecret) {
+    throw new Error('Webhook Stripe inseguro: configure STRIPE_WEBHOOK_SECRET em produção.');
+  }
 
   const rawBody = await readRawBody(req);
   const signature = String(req.headers['stripe-signature'] || '');

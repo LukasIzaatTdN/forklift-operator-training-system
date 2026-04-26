@@ -138,7 +138,7 @@ Frontend (`.env`):
 Backend (Vercel Environment Variables):
 
 - `STRIPE_SECRET_KEY`
-- `STRIPE_WEBHOOK_SECRET` (opcional, recomendado)
+- `STRIPE_WEBHOOK_SECRET` (obrigatório em produção)
 - `STRIPE_PRICE_BRL` (opcional, padrão `29.9`)
 - `PUBLIC_APP_URL` (opcional; se ausente, usa host da requisição)
 - `FIREBASE_PROJECT_ID`
@@ -146,7 +146,7 @@ Backend (Vercel Environment Variables):
 - `FIREBASE_PRIVATE_KEY`
 - `TOKEN_VALIDITY_HOURS`
 
-Arquivo de referência: `api/.env.example`
+
 
 ### Segurança Implementada
 
@@ -155,7 +155,7 @@ Arquivo de referência: `api/.env.example`
 - Transação no Firestore para bloquear reutilização.
 - Expiração de token.
 - Associação opcional token ↔ e-mail comprador.
-- Webhook Stripe com validação de assinatura quando `STRIPE_WEBHOOK_SECRET` está configurado.
+- Webhook Stripe com validação de assinatura (exigido em produção).
 - Frontend não decide aprovação de pagamento/token.
 
 ## Fluxo de usuários no Firebase

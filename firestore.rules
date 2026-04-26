@@ -121,7 +121,8 @@ service cloud.firestore {
 
       // Operator vê apenas os próprios chamados
       allow get: if isOperator() && resource.data.createdByUid == request.auth.uid;
-      allow list: if isOperator();
+      // Listagem de operator desabilitada para evitar leitura de chamados de terceiros via queries amplas.
+      allow list: if false;
     }
   }
 }
