@@ -64,6 +64,26 @@ export const trainingModules: TrainingModule[] = [
           'Nunca desça uma rampa com a carga à frente — risco de tombamento!',
           'Nunca transporte cargas com os garfos elevados'
         ]
+      },
+      {
+        id: 'ob-4',
+        title: 'Noções Técnicas: Tipos e Componentes da Empilhadeira',
+        content: [
+          'No conteúdo de reciclagem NR-11, as empilhadeiras são classificadas por propulsão (elétrica, combustão e GLP/GNV), equilíbrio (contrabalançada, patolada, retrátil e trilateral) e transmissão (mecânica, hidráulica, hidrostática e elétrica).',
+          'Empilhadeiras elétricas têm menor emissão local e são muito usadas em ambientes internos; modelos de combustão exigem atenção extra com ventilação e emissão de gases.',
+          'A empilhadeira contrabalançada é versátil para percursos mais longos e rampas moderadas, enquanto modelos retráteis e trilaterais são comuns em corredores mais estreitos.',
+          'Componentes críticos incluem: chassi/contrapeso, torre de elevação, garfos, rodas, sistema hidráulico, freios, painel, buzina e sistema de direção.',
+          'No motor de combustão, os sistemas de alimentação, lubrificação e arrefecimento precisam de inspeção e manutenção preventiva para evitar falhas e desgaste acelerado.',
+          'Conhecer os comandos e símbolos do painel é requisito básico para prevenir uso incorreto e reação tardia a alertas de falha.'
+        ],
+        highlights: [
+          'Entenda o tipo de empilhadeira antes de operar',
+          'Conheça os componentes críticos e sua função',
+          'Observe painéis/alertas antes e durante a operação'
+        ],
+        warnings: [
+          'Operar equipamento sem domínio técnico dos comandos e limitações aumenta risco de acidente grave'
+        ]
       }
     ]
   },
@@ -131,6 +151,26 @@ export const trainingModules: TrainingModule[] = [
           'Conheça os números de emergência: SAMU (192), Bombeiros (193)',
           'Saiba a localização dos extintores e saídas de emergência',
           'Em emergências com produtos químicos, consulte a FISPQ'
+        ]
+      },
+      {
+        id: 'seg-4',
+        title: 'Zona de Perigo, Pedestres e Isolamento de Corredores',
+        content: [
+          'Zona de perigo é toda área de deslocamento da empilhadeira e de elevação de carga onde pessoas podem se ferir por queda de material, choque ou tombamento.',
+          'Pessoas alheias à operação devem ser retiradas da área antes do início da tarefa, com isolamento por faixas/correntes nos dois lados do corredor quando aplicável.',
+          'A buzina e os sinais sonoros devem ser usados preventivamente em cruzamentos, entradas/saídas e aproximação de pedestres.',
+          'Se houver pedestre dentro da zona de risco, a operação deve ser interrompida imediatamente até a liberação da área.',
+          'O operador é responsável por não obstruir hidrantes, extintores, macas, painéis elétricos, saídas de emergência e rotas de circulação.',
+          'A segurança do entorno faz parte da qualidade operacional: proteger pessoas é prioridade acima de produtividade.'
+        ],
+        highlights: [
+          'Isole o corredor antes de iniciar movimentação crítica',
+          'Pare a operação ao identificar pedestres na área de risco',
+          'Nunca bloqueie rotas e equipamentos de emergência'
+        ],
+        warnings: [
+          'Operar sem isolamento em área com fluxo de pessoas cria risco iminente de acidente'
         ]
       }
     ]
@@ -200,6 +240,26 @@ export const trainingModules: TrainingModule[] = [
           'Mantenha histórico de todas as manutenções',
           'Comunique qualquer alteração no comportamento do equipamento'
         ]
+      },
+      {
+        id: 'man-4',
+        title: 'Bateria Tracionária: Recarga, Água e Prevenção de Incêndio',
+        content: [
+          'A bateria tracionária exige controle de temperatura, limpeza e rotina de recarga conforme manual do fabricante para preservar vida útil e segurança.',
+          'Para recarregar: desligue o equipamento, retire a chave, abra o compartimento, verifique danos visíveis, conecte corretamente na estação e siga o procedimento oficial.',
+          'Durante manuseio, não coloque objetos sobre a bateria e confirme travas/portas laterais após montagem ou desmontagem.',
+          'A inspeção de nível de água deve seguir frequência definida pela empresa/fabricante (ex.: semanal ou quinzenal), usando água deionizada quando necessário.',
+          'Outras intervenções técnicas em bateria devem ser feitas por profissional habilitado; operador executa apenas inspeções e rotina autorizada.',
+          'Na área de recarga: ambiente ventilado, sem fumaça/chama/faísca e com meios de combate a incêndio disponíveis.'
+        ],
+        highlights: [
+          'Recarga e inspeção sempre com procedimento padronizado',
+          'Complete nível apenas com água deionizada (quando indicado)',
+          'Use EPI adequado no manuseio da bateria'
+        ],
+        warnings: [
+          'Nunca recarregue bateria em local fechado sem ventilação ou próximo de fonte de ignição'
+        ]
       }
     ]
   },
@@ -268,6 +328,26 @@ export const trainingModules: TrainingModule[] = [
         warnings: [
           'Nunca improvise acessórios ou adaptações nos garfos'
         ]
+      },
+      {
+        id: 'mc-4',
+        title: 'Retirada e Colocação de Cargas (Passo a Passo)',
+        content: [
+          'Na retirada da carga: aproxime alinhado, garfos na horizontal, insira completamente, eleve de forma suave, estabilize com inclinação adequada e recue com cuidado.',
+          'Após retirar, mantenha a carga a aproximadamente 15-20 cm do piso para transporte, com velocidade reduzida e visão desobstruída.',
+          'Na colocação: alinhe com precisão ao porta-paletes, eleve um pouco acima do nível final, avance de forma controlada e desça lentamente até acomodar a carga.',
+          'Antes de sair, garanta que os garfos estão livres, recue cuidadosamente e retorne para posição de condução segura.',
+          'Evite qualquer rotação com carga elevada em corredor, pois esse comportamento aumenta muito o risco de tombamento.',
+          'Observe risco de carga instável, quebra de palete, vazamento hidráulico e desmoronamento da estrutura durante toda a movimentação.'
+        ],
+        highlights: [
+          'Retire e deposite carga com movimentos suaves e controlados',
+          'Transporte com carga baixa (15-20 cm)',
+          'Nunca faça giro em corredor com carga elevada'
+        ],
+        warnings: [
+          'Movimentação brusca durante retirada/colocação pode derrubar carga e tombar o equipamento'
+        ]
       }
     ]
   },
@@ -275,63 +355,89 @@ export const trainingModules: TrainingModule[] = [
     id: 'normas-nr11',
     title: 'Normas Regulamentadoras (NR-11)',
     icon: '📋',
-    description: 'Legislação, NR-11, direitos e deveres do operador e responsabilidades legais.',
+    description: 'Conteúdo de reciclagem NR-11 com foco em formação de operador, responsabilidades legais e operação segura.',
     color: 'from-purple-500 to-purple-600',
     lessons: [
       {
         id: 'nr-1',
-        title: 'NR-11 — Transporte, Movimentação, Armazenagem e Manuseio de Materiais',
+        title: 'Projeto de Formação e Reciclagem do Operador',
         content: [
-          'A NR-11 estabelece os requisitos de segurança para operações de movimentação de materiais em estabelecimentos industriais.',
-          'Os equipamentos de transporte mecanizado devem ser operados por trabalhadores qualificados e treinados.',
-          'A capacidade dos equipamentos não pode ser excedida e devem possuir indicação visível do peso máximo.',
-          'Os pisos dos locais de trabalho devem ser resistentes, regulares e antiderrapantes.',
-          'Os corredores de circulação devem ter largura mínima adequada e serem sinalizados.',
-          'Empilhadeiras devem possuir proteção contra queda de objetos (guarda-corpo) quando houver risco.'
+          'A formação de operador de empilhadeira é estruturada para habilitar, certificar e reciclar profissionais com foco em segurança e produtividade.',
+          'No material de reciclagem, o curso está organizado em módulo teórico (8 horas) e módulo prático (8 horas), com certificação condicionada ao desempenho.',
+          'Para participar da formação, o operador deve ser aprovado em avaliações prévias como psicossocial, exames complementares e exame clínico ocupacional.',
+          'A nota mínima para certificação é 7,0 em cada etapa avaliativa, reforçando o critério de aptidão técnica e comportamental.',
+          'Após convocação para vaga, há estágio supervisionado obrigatório com avaliação formal de aptidão antes da atuação autônoma.',
+          'A reciclagem periódica mantém o operador atualizado em procedimentos técnicos e de segurança, reduzindo risco operacional.'
         ],
         highlights: [
-          'Apenas operadores qualificados podem operar empilhadeiras',
-          'A capacidade máxima deve estar visível no equipamento',
-          'Corredores devem ser sinalizados e ter largura adequada'
+          'Formação combinando teoria + prática',
+          'Nota mínima 7,0 para certificação',
+          'Estágio supervisionado é obrigatório',
+          'Reciclagem periódica mantém habilitação segura'
+        ],
+        warnings: [
+          'Sem formação e reciclagem adequadas, o risco de acidentes e responsabilizações aumenta significativamente'
         ]
       },
       {
         id: 'nr-2',
-        title: 'Direitos e Deveres do Operador',
+        title: 'Responsabilidades Legais do Operador e da Empresa',
         content: [
-          'DIREITO: receber treinamento adequado e gratuito antes de operar o equipamento.',
-          'DIREITO: recusar-se a operar em condições inseguras sem sofrer retaliação.',
-          'DIREITO: receber EPIs adequados e em bom estado de conservação.',
-          'DEVER: realizar a inspeção pré-operacional antes de cada turno.',
-          'DEVER: utilizar todos os EPIs fornecidos corretamente.',
-          'DEVER: comunicar imediatamente qualquer defeito ou condição insegura ao supervisor.',
-          'DEVER: respeitar as normas de segurança e sinalização do local.',
-          'DEVER: portar o certificado de qualificação de operador durante a operação.'
+          'Acidentes com empilhadeira geralmente envolvem falhas de treinamento, falta de experiência, descumprimento de normas e ausência de manutenção.',
+          'O operador e o empregador podem responder civil, penal e trabalhistamente em casos de negligência, imprudência ou imperícia.',
+          'No âmbito civil, causar dano por ação ou omissão gera dever de reparação, inclusive com responsabilidade do empregador por atos dos empregados.',
+          'No âmbito penal, expor pessoas a risco grave ou provocar acidente por inobservância técnica pode gerar detenção ou reclusão.',
+          'No âmbito trabalhista, podem ocorrer advertência, suspensão e demissão por justa causa ao empregado, além de multa/embargo/interdição à empresa.',
+          'A cultura de segurança exige disciplina operacional diária, respeito às normas e comunicação imediata de desvios.'
         ],
         highlights: [
-          'Você tem o direito de recusar operação em condições inseguras',
-          'Porte sempre seu certificado de qualificação',
-          'Comunique imediatamente qualquer condição insegura'
+          'Quem cria o risco responde legalmente por seus atos',
+          'Empresa e operador compartilham responsabilidades',
+          'Segurança operacional também é obrigação jurídica'
         ],
         warnings: [
-          'Operar sem qualificação é infração grave para o empregador e para o operador'
+          'Operar sem treinamento, sem manutenção e sem seguir procedimento pode gerar acidente grave e responsabilização civil/criminal'
         ]
       },
       {
         id: 'nr-3',
-        title: 'Sinalização e Áreas de Operação',
+        title: 'Requisitos da NR-11 e Obrigações Operacionais',
         content: [
-          'Áreas de circulação de empilhadeiras devem ser sinalizadas com faixas no piso e placas indicativas.',
-          'Pedestres devem utilizar faixas de travessia demarcadas e passarelas quando disponíveis.',
-          'Espelhos convexos devem ser instalados em cruzamentos e pontos cegos dos corredores.',
-          'A velocidade máxima em áreas internas geralmente é de 10 km/h — respeite os limites do local.',
-          'Áreas de carga e descarga devem ser exclusivas e sinalizadas.',
-          'Proibida a circulação de empilhadeiras em áreas não autorizadas ou sem piso adequado.'
+          'A NR-11 determina que operadores de equipamentos motorizados recebam treinamento específico fornecido pela empresa para habilitação na função.',
+          'O operador deve portar identificação visível durante a jornada e manter revalidação periódica conforme exigência médica ocupacional.',
+          'Somente pessoas autorizadas e capacitadas podem operar a empilhadeira; é proibido permitir uso por terceiros não habilitados.',
+          'É proibido transportar ou elevar pessoas com empilhadeira, salvo equipamentos especificamente projetados e autorizados para essa finalidade.',
+          'Defeitos técnicos, danos e condições inseguras devem ser comunicados imediatamente; equipamento sem condição segura deve ser interditado.',
+          'Na rotina operacional, devem ser observados limite de carga, estabilidade, inspeção pré-uso, sinalização e regras de circulação interna.'
         ],
         highlights: [
-          'Respeite a sinalização do local — faixas, placas e espelhos',
-          'Velocidade máxima interna: geralmente 10 km/h',
-          'Áreas de carga/descarga são exclusivas para equipamentos'
+          'Treinamento específico é obrigatório para operar',
+          'Identificação e aptidão médica devem estar válidas',
+          'Equipamento inseguro deve ser retirado de operação',
+          'É proibido transportar pessoas na empilhadeira'
+        ],
+        warnings: [
+          'Ignorar requisito da NR-11 compromete a segurança e pode invalidar a habilitação operacional'
+        ]
+      },
+      {
+        id: 'nr-4',
+        title: 'NR-11 na Prática: Inspeção, Armazenagem e Ambiente',
+        content: [
+          'A NR-11 reforça que equipamentos de transporte motorizado devem ter buzina funcional e inspeção permanente, com troca imediata de peças defeituosas.',
+          'Em locais fechados sem ventilação adequada, a operação com motor de combustão interna é proibida sem sistema neutralizador apropriado.',
+          'Na armazenagem, a carga não pode exceder a capacidade do piso e não deve obstruir portas, saídas de emergência ou equipamentos contra incêndio.',
+          'Materiais empilhados devem manter afastamento das estruturas laterais, conforme referência normativa de segurança do local.',
+          'A capacidade máxima de trabalho do equipamento deve estar visível, e as condições de uso devem ser verificadas antes de cada turno.',
+          'Conformidade normativa não é apenas documentação: ela orienta conduta operacional e previne acidentes graves.'
+        ],
+        highlights: [
+          'Buzina, inspeção e manutenção são exigências normativas',
+          'Armazenagem deve respeitar capacidade do piso e rotas de emergência',
+          'Em ambiente fechado, controle de emissões é obrigatório'
+        ],
+        warnings: [
+          'Descumprir requisitos de armazenagem e ventilação pode gerar acidente, autuação e interdição'
         ]
       }
     ]
@@ -399,6 +505,26 @@ export const trainingModules: TrainingModule[] = [
         ],
         warnings: [
           'Evite dar ré em rampas — risco de tombamento'
+        ]
+      },
+      {
+        id: 'dd-4',
+        title: 'Aclives, Declives e Condição do Piso',
+        content: [
+          'Em rampas, a carga deve ser transportada no sentido ascendente, mantendo controle total de velocidade e aderência.',
+          'Não é permitido iniciar manobra em diagonal, mudar direção em aclive/declive ou estacionar o equipamento em inclinação.',
+          'Quando necessário em emergência, use calços para impedir deslocamento involuntário do equipamento.',
+          'Não execute coleta ou descarga de materiais com a máquina posicionada em subida ou descida.',
+          'A qualidade do piso impacta diretamente a estabilidade: superfícies irregulares, oleosas ou com resíduos aumentam risco de derrapagem e capotamento.',
+          'Operação defensiva em rampa exige velocidade reduzida, planejamento de rota e observação contínua do entorno.'
+        ],
+        highlights: [
+          'Carga sempre no sentido ascendente em rampas',
+          'Sem mudança de direção em aclive/declive',
+          'Piso ruim exige redução de velocidade e atenção redobrada'
+        ],
+        warnings: [
+          'Rampa com carga elevada ou manobra indevida é cenário clássico de tombamento'
         ]
       }
     ]
