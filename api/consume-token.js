@@ -1,5 +1,5 @@
 import { parseJsonBody } from './_lib/http.js';
-import { consumeTokenForSignup } from './_lib/paymentService.js';
+import { consumeTokenForAuthenticatedUser } from './_lib/paymentService.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -9,7 +9,9 @@ export default async function handler(req, res) {
 
   try {
     const body = await parseJsonBody(req);
-    await consumeTokenForSignup(body?.token, body?.userUid, body?.userEmail);
+    const authorization = String(req.headers.authorization || '');
+    const match = authorization.match(/^Bearer\s+(.+)$/i);
+    await consumeTokenForAuthenticatedUser(body?.token, match?.[1]);
     res.status(200).json({ success: true });
   } catch (error) {
     res.status(400).json({ success: false, error: error.message || 'Falha ao consumir token.' });

@@ -41,29 +41,6 @@ service cloud.firestore {
         && request.resource.data.name is string;
     }
 
-    function validTokenConsumeUpdate() {
-      // Usuário comum só pode consumir token para si mesmo:
-      // - used: false -> true
-      // - usedByUid = auth.uid
-      // - usedByEmail string
-      // - não pode alterar token, createdBy, expiresAt etc.
-      return isSignedIn()
-        && resource.data.used == false
-        && resource.data.expiresAt > request.time.toMillis()
-        && request.resource.data.used == true
-        && request.resource.data.usedByUid == request.auth.uid
-        && request.resource.data.usedByEmail is string
-        && request.resource.data.token == resource.data.token
-        && request.resource.data.createdByUid == resource.data.createdByUid
-        && request.resource.data.createdByEmail == resource.data.createdByEmail
-        && request.resource.data.createdAtMs == resource.data.createdAtMs
-        && request.resource.data.expiresAt == resource.data.expiresAt
-        && request.resource.data.createdAt == resource.data.createdAt
-        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
-          'used', 'usedAt', 'usedByUid', 'usedByEmail'
-        ]);
-    }
-
     // USERS
     match /users/{userId} {
       allow get: if isSelf(userId) || isAdmin();
@@ -86,14 +63,11 @@ service cloud.firestore {
       // Admin vê tudo
       allow get, list: if isAdmin();
 
-      // Usuário autenticado pode consultar token específico para consumo
-      allow get: if isSignedIn();
-
       // Só admin cria/remove token
       allow create, delete: if isAdmin();
 
-      // Admin pode atualizar livremente; usuário só pode consumir
-      allow update: if isAdmin() || validTokenConsumeUpdate();
+      // Consumo de token passa pelo backend, que valida Firebase Auth e e-mail.
+      allow update: if isAdmin();
     }
 
     // VIDEOAULAS

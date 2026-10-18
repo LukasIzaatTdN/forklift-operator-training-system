@@ -138,8 +138,8 @@ Frontend (`.env`):
 Backend (Vercel Environment Variables):
 
 - `STRIPE_SECRET_KEY`
-- `STRIPE_WEBHOOK_SECRET` (obrigatório em produção)
-- `STRIPE_PRICE_BRL` (opcional, padrão `29.9`)
+- `STRIPE_WEBHOOK_SECRET` (obrigatório em todos os ambientes; para teste local, use o segredo emitido pelo Stripe CLI)
+- `STRIPE_PRICE_BRL` (preço definido no servidor; padrão `19.90`, alinhado ao checkout de teste)
 - `PUBLIC_APP_URL` (opcional; se ausente, usa host da requisição)
 - `FIREBASE_PROJECT_ID`
 - `FIREBASE_CLIENT_EMAIL`
@@ -151,12 +151,15 @@ Backend (Vercel Environment Variables):
 ### Segurança Implementada
 
 - Token gerado apenas no backend com `crypto.randomBytes`.
-- Validação e consumo de token no backend.
+- Validação do token e consumo autenticado no backend; o consumo exige Firebase ID token verificado.
 - Transação no Firestore para bloquear reutilização.
 - Expiração de token.
-- Associação opcional token ↔ e-mail comprador.
-- Webhook Stripe com validação de assinatura (exigido em produção).
+- Tokens de pagamento associados ao e-mail comprador; a sessão é conferida com a intenção, valor e moeda esperados.
+- Webhook Stripe sempre validado pela assinatura e recebido com o corpo bruto.
+- Regras Firestore não permitem que usuários comuns consultem documentos de tokens.
 - Frontend não decide aprovação de pagamento/token.
+
+O preço não é aceito do frontend. Defina `STRIPE_PRICE_BRL` somente nas variáveis seguras do backend (por exemplo, Vercel), sem prefixo `VITE_`.
 
 ## Fluxo de usuários no Firebase
 

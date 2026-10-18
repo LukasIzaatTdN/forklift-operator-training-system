@@ -7,7 +7,6 @@ interface ApiResult<T> {
 export interface CreatePaymentPayload {
   email: string;
   name: string;
-  amount?: number;
 }
 
 export interface CreatePaymentResponse {
@@ -21,14 +20,17 @@ function getApiBaseUrl(): string {
   return raw || '/api';
 }
 
-async function postJson<T>(path: string, body: unknown): Promise<ApiResult<T>> {
+async function postJson<T>(path: string, body: unknown, authorization?: string): Promise<ApiResult<T>> {
   const baseUrl = getApiBaseUrl();
   const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
 
   try {
     const response = await fetch(`${normalizedBaseUrl}${path}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(authorization ? { Authorization: authorization } : {}),
+      },
       body: JSON.stringify(body),
     });
 
@@ -55,10 +57,9 @@ export async function validateSignupToken(token: string, email: string): Promise
 
 export async function consumeSignupToken(
   token: string,
-  userUid: string,
-  userEmail: string
+  idToken: string
 ): Promise<ApiResult<{ success: boolean }>> {
-  return postJson<{ success: boolean }>('/consume-token', { token, userUid, userEmail });
+  return postJson<{ success: boolean }>('/consume-token', { token }, `Bearer ${idToken}`);
 }
 
 export async function getTokenByPayment(

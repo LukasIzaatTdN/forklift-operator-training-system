@@ -1,4 +1,5 @@
 import { cert, getApps, initializeApp } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 
 function readRequiredEnv(name) {
@@ -38,4 +39,10 @@ function getFirebaseApp() {
 
 export function getDb() {
   return getFirestore(getFirebaseApp());
+}
+
+export async function verifyFirebaseIdToken(idToken) {
+  const token = String(idToken || '').trim();
+  if (!token) throw new Error('Autenticação Firebase obrigatória.');
+  return getAuth(getFirebaseApp()).verifyIdToken(token, true);
 }

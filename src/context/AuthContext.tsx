@@ -287,8 +287,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         const consumeResult = await consumeSignupToken(
           normalizedToken,
-          credential.user.uid,
-          credential.user.email || normalizedEmail
+          await credential.user.getIdToken()
         );
         if (!consumeResult.success) {
           throw new Error(consumeResult.error || 'Falha ao consumir token.');

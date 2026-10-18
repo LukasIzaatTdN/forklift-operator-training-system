@@ -1,10 +1,10 @@
 import crypto from 'crypto';
 import Stripe from 'stripe';
 import { FieldValue } from 'firebase-admin/firestore';
-import { getDb } from './firebaseAdmin.js';
+import { getDb, verifyFirebaseIdToken } from './firebaseAdmin.js';
 
 const TOKEN_VALIDITY_HOURS = Number(process.env.TOKEN_VALIDITY_HOURS || 24);
-const DEFAULT_AMOUNT_BRL = Number(process.env.STRIPE_PRICE_BRL || 29.9);
+const ACCESS_PRICE_BRL = Number(process.env.STRIPE_PRICE_BRL || 19.9);
 
 function normalizeEmail(email) {
   return String(email || '').trim().toLowerCase();
@@ -56,12 +56,12 @@ export async function createPaymentIntent(payload, req) {
 
   const email = normalizeEmail(payload.email);
   const name = String(payload.name || '').trim() || email.split('@')[0] || 'Operador';
-  const amount = Number(payload.amount || DEFAULT_AMOUNT_BRL);
+  const amount = ACCESS_PRICE_BRL;
 
   if (!email) {
     throw new Error('E-mail é obrigatório para criar pagamento.');
   }
-  if (!Number.isFinite(amount) || amount <= 0) {
+  if (!Number.isFinite(amount) || amount <= 0 || !Number.isSafeInteger(Math.round(amount * 100))) {
     throw new Error('Valor de pagamento inválido.');
   }
 
@@ -141,22 +141,36 @@ async function ensureTokenForApprovedSessionId(sessionId) {
   }
 
   const intent = intentSnap.data() || {};
+  const sessionEmail = normalizeEmail(session.customer_details?.email || session.customer_email);
+  const intentEmail = normalizeEmail(intent.email);
+  const expectedAmount = Math.round(Number(intent.amount) * 100);
+
+  if (intent.checkoutSessionId !== session.id || session.metadata?.intentId !== intentId) {
+    throw new Error('Sessão Stripe não corresponde à intenção de pagamento.');
+  }
+  if (!intentEmail || sessionEmail !== intentEmail || normalizeEmail(session.metadata?.email) !== intentEmail) {
+    throw new Error('E-mail da sessão Stripe não corresponde ao comprador registrado.');
+  }
+  if (!Number.isSafeInteger(expectedAmount) || session.amount_total !== expectedAmount || session.currency !== 'brl') {
+    throw new Error('Valor ou moeda da sessão Stripe não corresponde ao pedido.');
+  }
+
   if (intent.token) {
     return { approved: true, status: paymentStatus, token: intent.token, intentId };
   }
 
-  const purchaserEmail = normalizeEmail(intent.email || session.customer_details?.email || session.customer_email);
+  const purchaserEmail = intentEmail;
   const token = await generateUniqueToken('PAY');
   const expiresAt = nowMs() + TOKEN_VALIDITY_HOURS * 60 * 60 * 1000;
 
-  await db.runTransaction(async (tx) => {
+  const persistedToken = await db.runTransaction(async (tx) => {
     const freshIntentSnap = await tx.get(intentRef);
     const freshIntentData = freshIntentSnap.data() || {};
 
-    if (freshIntentData.token) return;
+    if (freshIntentData.token) return freshIntentData.token;
 
     const tokenRef = db.collection('creation_tokens').doc(token);
-    tx.set(tokenRef, {
+    tx.create(tokenRef, {
       token,
       source: 'stripe',
       createdAt: FieldValue.serverTimestamp(),
@@ -182,17 +196,19 @@ async function ensureTokenForApprovedSessionId(sessionId) {
       token,
       tokenId: token,
     });
+
+    return token;
   });
 
-  return { approved: true, status: paymentStatus, token, intentId, purchaserEmail };
+  return { approved: true, status: paymentStatus, token: persistedToken, intentId, purchaserEmail };
 }
 
 export async function getTokenByPayment(sessionId, email) {
   const normalizedSessionId = String(sessionId || '').trim();
   const normalizedEmail = normalizeEmail(email);
 
-  if (!normalizedSessionId) {
-    throw new Error('Informe paymentId/session_id.');
+  if (!normalizedSessionId || !normalizedEmail) {
+    throw new Error('Informe o identificador da sessão e o e-mail usado na compra.');
   }
 
   const result = await ensureTokenForApprovedSessionId(normalizedSessionId);
@@ -200,7 +216,7 @@ export async function getTokenByPayment(sessionId, email) {
     throw new Error('Pagamento ainda não aprovado.');
   }
 
-  if (normalizedEmail && result.purchaserEmail && normalizeEmail(result.purchaserEmail) !== normalizedEmail) {
+  if (!result.purchaserEmail || normalizeEmail(result.purchaserEmail) !== normalizedEmail) {
     throw new Error('Pagamento não corresponde ao e-mail informado.');
   }
 
@@ -212,8 +228,8 @@ export async function validateTokenForSignup(token, email) {
 
   const normalizedToken = String(token || '').trim().toUpperCase();
   const normalizedEmail = normalizeEmail(email);
-  if (!normalizedToken) {
-    throw new Error('Token não informado.');
+  if (!normalizedToken || !normalizedEmail) {
+    throw new Error('Token e e-mail são obrigatórios.');
   }
 
   const ref = db.collection('creation_tokens').doc(normalizedToken);
@@ -232,7 +248,7 @@ export async function validateTokenForSignup(token, email) {
 
   if (data.purchaserEmail) {
     const owner = normalizeEmail(data.purchaserEmail);
-    if (owner && normalizedEmail && owner !== normalizedEmail) {
+    if (owner && owner !== normalizedEmail) {
       throw new Error('Token pertence a outro e-mail.');
     }
   }
@@ -245,13 +261,14 @@ export async function validateTokenForSignup(token, email) {
   };
 }
 
-export async function consumeTokenForSignup(token, userUid, userEmail) {
+export async function consumeTokenForSignup(token, decodedUser) {
   const db = getDb();
 
   const normalizedToken = String(token || '').trim().toUpperCase();
-  const normalizedEmail = normalizeEmail(userEmail);
+  const userUid = String(decodedUser?.uid || '').trim();
+  const normalizedEmail = normalizeEmail(decodedUser?.email);
   if (!normalizedToken || !userUid || !normalizedEmail) {
-    throw new Error('Dados insuficientes para consumir token.');
+    throw new Error('Token e identidade Firebase válida com e-mail são obrigatórios.');
   }
 
   const ref = db.collection('creation_tokens').doc(normalizedToken);
@@ -279,12 +296,18 @@ export async function consumeTokenForSignup(token, userUid, userEmail) {
   });
 }
 
+export async function consumeTokenForAuthenticatedUser(token, idToken) {
+  const decodedUser = await verifyFirebaseIdToken(idToken);
+  await consumeTokenForSignup(token, decodedUser);
+}
+
 async function readRawBody(req) {
+  if (Buffer.isBuffer(req.rawBody)) return req.rawBody.toString('utf8');
   if (typeof req.body === 'string') return req.body;
   if (Buffer.isBuffer(req.body)) return req.body.toString('utf8');
 
   if (req.body && typeof req.body === 'object') {
-    return JSON.stringify(req.body);
+    throw new Error('Corpo do webhook já foi interpretado; corpo bruto é necessário para validar a assinatura.');
   }
 
   const chunks = [];
@@ -297,26 +320,16 @@ async function readRawBody(req) {
 export async function handleStripeWebhook(req) {
   const stripe = stripeClient();
   const webhookSecret = String(process.env.STRIPE_WEBHOOK_SECRET || '').trim();
-  const isProductionEnv =
-    String(process.env.VERCEL_ENV || '').trim() === 'production' ||
-    String(process.env.NODE_ENV || '').trim() === 'production';
-
-  if (isProductionEnv && !webhookSecret) {
-    throw new Error('Webhook Stripe inseguro: configure STRIPE_WEBHOOK_SECRET em produção.');
-  }
+  if (!webhookSecret) throw new Error('Webhook Stripe desativado: configure STRIPE_WEBHOOK_SECRET.');
 
   const rawBody = await readRawBody(req);
   const signature = String(req.headers['stripe-signature'] || '');
 
   let event;
-  if (webhookSecret) {
-    try {
-      event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
-    } catch (error) {
-      throw new Error(`Assinatura de webhook inválida: ${error.message}`);
-    }
-  } else {
-    event = JSON.parse(rawBody || '{}');
+  try {
+    event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
+  } catch (error) {
+    throw new Error(`Assinatura de webhook inválida: ${error.message}`);
   }
 
   const type = String(event.type || '');

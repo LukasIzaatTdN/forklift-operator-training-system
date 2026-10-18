@@ -46,39 +46,6 @@ export async function createCreationToken(adminUid: string, adminEmail: string, 
   return token;
 }
 
-export async function consumeCreationToken(token: string, userUid: string, userEmail: string): Promise<void> {
-  if (!firestoreDb) {
-    throw new Error('Firestore não configurado.');
-  }
-
-  const normalized = token.trim().toUpperCase();
-  const ref = doc(firestoreDb, 'creation_tokens', normalized);
-
-  await runTransaction(firestoreDb, async (tx) => {
-    const snap = await tx.get(ref);
-    if (!snap.exists()) {
-      throw new Error('Token inválido.');
-    }
-
-    const data = snap.data() as { used?: boolean; expiresAt?: number };
-    if (data.used) {
-      throw new Error('Token já utilizado.');
-    }
-
-    if (!data.expiresAt || data.expiresAt < Date.now()) {
-      tx.update(ref, { used: true, usedAt: serverTimestamp(), usedByUid: 'expired', usedByEmail: 'expired' });
-      throw new Error('Token expirado.');
-    }
-
-    tx.update(ref, {
-      used: true,
-      usedAt: serverTimestamp(),
-      usedByUid: userUid,
-      usedByEmail: userEmail,
-    });
-  });
-}
-
 export async function listActiveCreationTokens(max = 10): Promise<CreationTokenItem[]> {
   if (!firestoreDb) {
     return [];
